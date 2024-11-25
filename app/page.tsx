@@ -9,7 +9,7 @@ export default async function Home() {
         {/* The navigation bar */}
         <NavigationAnyAccess />
         <div id="hero">
-
+          {/* TODO: Implement hero section */}
         </div>
       </main>
     </div>

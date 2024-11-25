@@ -4,5 +4,8 @@ export default withMiddlewareAuthRequired();
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: '/dashboard/:path*',
+  matcher: [
+    '/dashboard/:path*',
+    '/form-editor/:path*'
+  ],
 }
