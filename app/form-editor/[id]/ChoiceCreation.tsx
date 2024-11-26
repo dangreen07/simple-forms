@@ -30,7 +30,7 @@ export default function ChoiceCreation({ deleteMeCallback, questions, setQuestio
                     <button className="btn btn-ghost btn-circle btn-sm" type="button" onClick={deleteMeCallback}><RiDeleteBin5Fill size={24} /></button>
                 </div>
                 <div className="flex gap-2">
-                    <p className="text-xl font-bold py-1">{questions[index].data.questionNumber}.</p>
+                    <p className="text-xl font-bold py-1">{index + 1}.</p>
                     <div className="flex flex-col gap-3 flex-grow">
                         <input type="text" className="outline-none border-none bg-neutral-100 p-2 rounded-md" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
                             const copy = [...questions];
@@ -74,7 +74,7 @@ export default function ChoiceCreation({ deleteMeCallback, questions, setQuestio
                 </div>
             </div> :
             <div className="flex flex-col hover:bg-neutral-200 bg-neutral-100 rounded-lg p-6 gap-3">
-                <p className="text-lg font-bold">{questions[index].data.questionNumber}. {questions[index].data.questionText}</p>
+                <p className="text-lg font-bold">{index + 1}. {questions[index].data.questionText}</p>
                 <div className="flex flex-col gap-3">
                     {questions[index].data.options.map((item, index) => {
                         return (

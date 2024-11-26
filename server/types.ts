@@ -1,14 +1,18 @@
 export type question = {
     type: "Choice",
-    data: {
-        questionText: string,
-        options: string[],
-        editMode: boolean,
-        questionNumber: number
-    }
+    data: ChoiceData
 } | {
     type: "Text",
-    data: {
-        questionText: string
-    }
+    data: TextData
 };
+
+export type ChoiceData = {
+    choiceId: number,
+    questionText: string,
+    options: string[],
+    editMode: boolean
+};
+
+export type TextData = {
+    questionText: string
+}

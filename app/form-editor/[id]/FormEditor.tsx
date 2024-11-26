@@ -11,9 +11,9 @@ import { question } from "@/server/types";
 import { CreateNewForm } from "@/server/forms";
 import { useRouter } from "next/navigation";
 
-export default function FormEditor({ initialFormName }: { initialFormName: string }) {
+export default function FormEditor({ initialFormName, initialQuestions }: { initialFormName: string, initialQuestions: question[] }) {
     const [formName, setFormName] = useState(initialFormName);
-    const [questions, setQuestions] = useState<question[]>([]);
+    const [questions, setQuestions] = useState<question[]>(initialQuestions);
     const [justCreatedIndex, setJustCreatedIndex] = useState(-1);
 
     const router = useRouter();
@@ -77,10 +77,10 @@ export default function FormEditor({ initialFormName }: { initialFormName: strin
                                     const current: question = {
                                         type: "Choice",
                                         data: {
+                                            choiceId: -1, // Need to make a server call here to add the data and get the choice ID
                                             questionText: "Question",
                                             options: ["Option 1", "Option 2"],
-                                            editMode: true,
-                                            questionNumber: copy.length + 1
+                                            editMode: true
                                         }
                                     };
                                     copy.push(current);

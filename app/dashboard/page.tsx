@@ -5,7 +5,7 @@ import { FiEdit, FiPlus } from "react-icons/fi";
 export default function Page() {
     return (
         <div className="bg-neutral-100 min-h-screen">
-            <NavigationAnyAccess />
+            <NavigationAnyAccess checkSession={false} />
             <div className="flex flex-col gap-4 max-w-3xl mx-auto">
                 <div className="px-5 py-3 flex justify-between">
                     <p className="text-2xl text-black font-bold">Your Forms</p>

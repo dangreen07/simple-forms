@@ -4,9 +4,12 @@ import Link from "next/link";
 
 const josefinSans = Josefin_Sans({ subsets: ["latin"] });
 
-export default async function NavigationAnyAccess() {
-  const session = await getSession();
-  const user = session?.user;
+export default async function NavigationAnyAccess({ checkSession=true }) {
+  let user = null;
+  if (checkSession) {
+    const session = await getSession();
+    user = session?.user;
+  }
 
   return (
       <div id="navbar" className="flex justify-between w-screen px-32 py-6 items-center bg-neutral-200">
