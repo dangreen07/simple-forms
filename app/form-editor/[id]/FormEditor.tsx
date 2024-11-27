@@ -1,42 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FaRegCalendarDays, FaRegThumbsUp } from "react-icons/fa6";
 import { FiPlus } from "react-icons/fi";
 import { LuArrowDownUp } from "react-icons/lu";
 import { MdOutlineRadioButtonChecked } from "react-icons/md";
 import { PiTextTBold } from "react-icons/pi";
-import ChoiceCreation from "./ChoiceCreation";
+import ChoiceCreation, { useClickOutside } from "./ChoiceCreation";
 import { question } from "@/server/types";
-import { CreateNewForm } from "@/server/forms";
-import { useRouter } from "next/navigation";
+import { CreateNewChoicesQuestion } from "@/server/choices";
+import { UpdateFormTitle } from "@/server/forms";
 
-export default function FormEditor({ initialFormName, initialQuestions }: { initialFormName: string, initialQuestions: question[] }) {
+export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: number }) {
     const [formName, setFormName] = useState(initialFormName);
     const [questions, setQuestions] = useState<question[]>(initialQuestions);
     const [justCreatedIndex, setJustCreatedIndex] = useState(-1);
+    const titleRef = useRef<HTMLInputElement | null>(null);
+    const [editingTitle, setEditingTitle] = useState(false);
 
-    const router = useRouter();
+    async function saveTitleToDatabase() {
+        if (editingTitle) {
+            await UpdateFormTitle(formID, formName);
+        }
+        setEditingTitle(false);
+    }
+
+    useClickOutside(titleRef, saveTitleToDatabase);
 
     return (
         <div className="flex flex-col flex-grow">
-            <div className="flex  justify-center">
-                <div className="flex flex-grow max-w-6xl justify-end h-12 items-center px-2">
-                    <button className="btn btn-primary btn-sm" onClick={async () => {
-                        // Check if the current form is new, so a redirect is required and saving is different
-                        const formID = await CreateNewForm(formName, questions);
-                        if (formID != null) {
-                            router.replace(`/form-editor/${formID}`);
-                        }
-                    }}>Save</button>
-                </div>
-            </div>
             <div className="flex h-full flex-grow justify-center">
-                <div className="bg-neutral-100 max-w-6xl flex-grow mb-12 rounded-lg">
+                <div className="bg-neutral-100 max-w-6xl flex-grow my-6 rounded-lg">
                     <div id="form-content" className="w-full flex flex-col text-black px-2 sm:px-12 py-16 gap-4">
-                        <input value={formName} onChange={(current) => setFormName(current.target.value)} className="text-3xl sm:text-5xl font-semibold bg-neutral-100 border-none outline-none" placeholder="Form title here..." />
-                        {questions.map((current, index) => {
+                        <input ref={titleRef} value={formName} onChange={(current) => {
+                            setEditingTitle(true);
+                            setFormName(current.target.value);
+                        }} className="text-3xl sm:text-5xl font-semibold bg-neutral-100 border-none outline-none" placeholder="Form title here..." />
+                        {questions.sort((a,b) => a.data.order_index - b.data.order_index).map((current, index) => {
                             if (current.type == "Choice") {
+                                if (questions[index].data.order_index == -1) {
+                                    questions[index].data.order_index = index;
+                                }
                                 return (
                                     <ChoiceCreation key={index}
                                         deleteMeCallback={() => {
@@ -48,6 +52,7 @@ export default function FormEditor({ initialFormName, initialQuestions }: { init
                                         setQuestions={setQuestions}
                                         index={index}
                                         justCreated={index == justCreatedIndex}
+                                        choiceID={current.data.choiceId}
                                     />
                                 );
                             }
@@ -71,16 +76,20 @@ export default function FormEditor({ initialFormName, initialQuestions }: { init
                                 <span className="text-primary font-bold">Add new question</span>
                             </button>
                             <div id="add-new-question-content" className="px-3 duration-200 hidden gap-4 grid-cols-3">
-                                <button className="btn btn-accent rounded-full" onClick={() => {
+                                <button className="btn btn-accent rounded-full" onClick={async () => {
                                     document.getElementById("add-new-question-button")?.click();
                                     const copy = [...questions];
+                                    const response = await CreateNewChoicesQuestion(formID, "Question", ["Option 1", "Option 2"], questions.filter((current) => current.type == 'Choice').length);
+                                    if (response == null)
+                                        return;
                                     const current: question = {
                                         type: "Choice",
                                         data: {
-                                            choiceId: -1, // Need to make a server call here to add the data and get the choice ID
+                                            choiceId: response.choicesID,
                                             questionText: "Question",
-                                            options: ["Option 1", "Option 2"],
-                                            editMode: true
+                                            options: response.options,
+                                            editMode: true,
+                                            order_index: response.orderIndex
                                         }
                                     };
                                     copy.push(current);

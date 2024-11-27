@@ -1,17 +1,24 @@
 "use client";
 
+import { CreateNewChoiceOption, DeleteChoiceOption, UpdateChoiceQuestion } from "@/server/choices";
 import { question } from "@/server/types";
 import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { MdOutlineRadioButtonChecked, MdOutlineRadioButtonUnchecked } from "react-icons/md";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 
-export default function ChoiceCreation({ deleteMeCallback, questions, setQuestions, index, justCreated }: { deleteMeCallback: () => void, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, justCreated: boolean }) {
+export default function ChoiceCreation({ deleteMeCallback, questions, setQuestions, index, justCreated, choiceID }: { deleteMeCallback: () => void, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, justCreated: boolean, choiceID: number }) {
     const [editMode, setEditMode] = useState(justCreated);
     const ref = useRef<HTMLDivElement | null>(null);
 
     function editModeSetFalse() {
-        setEditMode(false);
+        if (editMode != false) {
+            console.log("Run!");
+            setEditMode(false);
+            if (questions[index].type == 'Choice') {
+                UpdateChoiceQuestion(choiceID, questions[index].data.questionText, questions[index].data.options, questions[index].data.order_index);
+            }
+        }
     }
 
     useClickOutside(ref, editModeSetFalse);
@@ -37,18 +44,22 @@ export default function ChoiceCreation({ deleteMeCallback, questions, setQuestio
                             copy[index].data.questionText = current.target.value;
                             setQuestions(copy);
                         }} />
-                        {questions[index].data.options.map((item, i) => {
+                        {questions[index].data.options.sort((a, b) => a.order_index - b.order_index).map((item, i) => {
+                            if (item.order_index == -1) {
+                                if (questions[index].type == "Choice")
+                                    questions[index].data.options[i].order_index = i;
+                            }
                             return (
                                 <div key={i} className="flex gap-3 items-center">
                                     <span className="flex items-center justify-center">
                                         <MdOutlineRadioButtonChecked size={24} />
                                     </span>
-                                    <input type="text" className="outline-none border-none bg-neutral-100 p-2 rounded-md" value={item} onChange={(current) => {
+                                    <input type="text" className="outline-none border-none bg-neutral-100 p-2 rounded-md" value={item.option} onChange={(current) => {
                                         const copy = [...questions];
                                         if (copy[index].type != "Choice") {
                                             return;
                                         }
-                                        copy[index].data.options[i] = current.target.value;
+                                        copy[index].data.options[i].option = current.target.value;
                                         setQuestions(copy);
                                     }} />
                                     <button className="btn btn-ghost btn-circle btn-sm text-red-600" type="button" onClick={() => {
@@ -56,18 +67,22 @@ export default function ChoiceCreation({ deleteMeCallback, questions, setQuestio
                                         if (copy[index].type != "Choice") {
                                             return;
                                         }
+                                        DeleteChoiceOption(copy[index].data.options[i].option_id);
                                         copy[index].data.options.splice(i,1);
                                         setQuestions(copy);
                                     }}><RiDeleteBin5Fill size={24} /></button>
                                 </div>
                             )
                         })}
-                        <button type="button" className="flex gap-3 w-fit" onClick={() => {
+                        <button type="button" className="flex gap-3 w-fit" onClick={async () => {
                             const copy = [...questions];
                             if (copy[index].type != "Choice") {
                                 return;
                             }
-                            copy[index].data.options.push("");
+                            const response = await CreateNewChoiceOption(choiceID, "", copy[index].data.options.length);
+                            if (response == null)
+                                return;
+                            copy[index].data.options.push(response);
                             setQuestions(copy);
                         }}><FiPlus size={24} /> Add New Option</button>
                     </div>
@@ -76,13 +91,13 @@ export default function ChoiceCreation({ deleteMeCallback, questions, setQuestio
             <div className="flex flex-col hover:bg-neutral-200 bg-neutral-100 rounded-lg p-6 gap-3">
                 <p className="text-lg font-bold">{index + 1}. {questions[index].data.questionText}</p>
                 <div className="flex flex-col gap-3">
-                    {questions[index].data.options.map((item, index) => {
+                    {questions[index].data.options.sort((a, b) => a.order_index - b.order_index).map((item, index) => {
                         return (
                             <div key={index} className="flex px-5 gap-2 items-center">
                                 <span className="flex items-center justify-center">
                                     <MdOutlineRadioButtonUnchecked size={24} />
                                 </span>
-                                <p className="font-semibold">{item}</p>
+                                <p className="font-semibold">{item.option}</p>
                             </div>
                         )
                     })}

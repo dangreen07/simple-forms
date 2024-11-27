@@ -1,7 +1,7 @@
 "use server";
 
 import { getSession } from "@auth0/nextjs-auth0";
-import { ChoiceData, question } from "./types";
+import { ChoiceData, OptionsData, question } from "./types";
 import { drizzle } from "drizzle-orm/neon-http";
 import { choicesOptionsTable, choicesTable, formsTable } from "@/db/schema";
 import { eq, and } from 'drizzle-orm';
@@ -53,7 +53,9 @@ export async function GetFormData(id: number) {
         choices_id: choicesTable.choices_id,
         question: choicesTable.question,
         option_id: choicesOptionsTable.option_id,
-        option: choicesOptionsTable.option 
+        option: choicesOptionsTable.option,
+        option_order_index: choicesOptionsTable.orderIndex,
+        choices_order_index: choicesTable.choicesOrderIndex
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -66,7 +68,7 @@ export async function GetFormData(id: number) {
     const formName = formData[0].formName ?? "";
     const choices: ChoiceData[] = [];
     formData.forEach(element => {
-        let optionsList: string[] = [];
+        let optionsList: OptionsData[] = [];
         let itemIndex = -1;
         choices.forEach((item, index) => {
             if (item.choiceId == element.choices_id) {
@@ -76,24 +78,37 @@ export async function GetFormData(id: number) {
         });
         if (itemIndex != -1) {
             // Any of the values in the choices array are the same as the current element
-            optionsList.push(element.option ?? "");
+            optionsList.push({
+                option_id: element.option_id ?? -1,
+                option: element.option ?? "",
+                order_index: element.option_order_index ?? -1
+            });
             choices[itemIndex] = {
                 choiceId: element.choices_id??0,
                 questionText: element.question??"",
                 options: optionsList,
-                editMode: false
+                editMode: false,
+                order_index: element.choices_order_index??-1,
             };
         }
         else {
             if (element.option != null) {
-                optionsList.push(element.option);
+                optionsList.push({
+                    option_id: element.option_id ?? -1,
+                    option: element.option ?? "",
+                    order_index: element.option_order_index ?? -1,
+                });
             }
-            choices.push({
-                choiceId: element.choices_id ?? 0,
-                questionText: element.question ?? "",
-                options: optionsList,
-                editMode: false
-            });
+            if (element.choices_id != null) {
+                // There are no choices here
+                choices.push({
+                    choiceId: element.choices_id,
+                    questionText: element.question ?? "",
+                    options: optionsList,
+                    editMode: false,
+                    order_index: element.choices_order_index ?? -1,
+                });
+            }
         }
     });
     const output: question[] = choices.map((current) => {
@@ -108,8 +123,8 @@ export async function GetFormData(id: number) {
     };
 }
 
-// This will run when the user saves the new form for the first time
-export async function CreateNewForm(name: string, questions: question[]): Promise<number | null> {
+
+export async function CreateNewForm(name: string): Promise<number | null> {
     const session = await getSession();
     if (session == null) {
         // User not defined
@@ -123,43 +138,41 @@ export async function CreateNewForm(name: string, questions: question[]): Promis
         user_id: user_id
     }).returning();
     const formID: number = response[0].id;
-    // Start adding the questions to the database
-    const cQuestions: question[] = questions.filter((current) => current.type == "Choice");
-    if (cQuestions.length == 0) {
-        return formID;
-    }
-    const mappedChoiceQuestions = questions.map((current) => {
-        if (current.type == 'Choice') {
-            return current.data;
-        }
-    }).filter((current) => current != undefined);
-    
-    const output = await db.insert(choicesTable).values(mappedChoiceQuestions.map((current) => {
-        return {
-            question: current.questionText,
-            form_id: formID
-        }
-    })).returning();
-
-    if (output.length != mappedChoiceQuestions.length) {
-        // Something went wrong
-        console.error(`Failed to create a new forms choices. Created ${output.length} values and should've created ${cQuestions.length} values.`);
-    }
-    for(let i = 0; i < output.length; i++) {
-        if (mappedChoiceQuestions[i].options.length == 0)
-            continue;
-        // const current = await sql(`INSERT INTO choices_options(option, choices_id) VALUES ${mappedInput.join(", ")} RETURNING *`);
-        const current = await db.insert(choicesTable).values(mappedChoiceQuestions[i].options.map((current) => {
-            return {
-                option: current,
-                choices_id: output[i].choices_id
-            };
-        })).returning();
-        if (current.length != mappedChoiceQuestions.length) {
-            // Something went wrong
-            console.error("Failed to create options for the choices on the new form!")
-        }
-    }
     return formID;
 }
 
+export async function GetForms() {
+    const session = await getSession();
+    if (session == null) {
+        // User not defined
+        return [];
+    }
+    const user = session.user;
+    const user_id = user.sub;
+
+    const response = await db.select().from(formsTable).where(eq(formsTable.user_id, user_id));
+    return response.map((current) => {
+        return {
+            id: current.id,
+            name: current.name
+        }
+    });
+}
+
+export async function UpdateFormTitle(formID: number, formTitle: string) {
+    const session = await getSession();
+    if (session == null) {
+        // User not defined
+        return [];
+    }
+    const user = session.user;
+    const user_id = user.sub;
+
+    const response = await db.update(formsTable).set({
+        name: formTitle
+    }).where(and(eq(formsTable.user_id, user_id), eq(formsTable.id, formID)));
+    if (response.rowCount == 1) {
+        return true;
+    }
+    return false;
+}

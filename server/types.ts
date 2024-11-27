@@ -9,10 +9,18 @@ export type question = {
 export type ChoiceData = {
     choiceId: number,
     questionText: string,
-    options: string[],
-    editMode: boolean
+    options: OptionsData[],
+    editMode: boolean,
+    order_index: number
 };
 
+export type OptionsData = {
+    option_id: number,
+    option: string,
+    order_index: number
+}
+
 export type TextData = {
-    questionText: string
+    questionText: string,
+    order_index: number
 }

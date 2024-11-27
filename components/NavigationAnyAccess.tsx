@@ -5,10 +5,10 @@ import Link from "next/link";
 const josefinSans = Josefin_Sans({ subsets: ["latin"] });
 
 export default async function NavigationAnyAccess({ checkSession=true }) {
-  let user = null;
+  let user = true;
   if (checkSession) {
     const session = await getSession();
-    user = session?.user;
+    user = session?.user != undefined;
   }
 
   return (
