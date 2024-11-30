@@ -2,13 +2,15 @@
 
 import { CreateNewChoiceOption, DeleteChoice, DeleteChoiceOption, UpdateChoiceQuestion } from "@/server/choices";
 import { question } from "@/server/types";
+import { DraggableProvided } from "@hello-pangea/dnd";
 import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { MdOutlineRadioButtonChecked, MdOutlineRadioButtonUnchecked } from "react-icons/md";
 import { RiDeleteBin5Fill } from "react-icons/ri";
+import { RxDragHandleDots2 } from "react-icons/rx";
 import TextareaAutosize from 'react-textarea-autosize';
 
-export default function ChoiceQuestionComponent({ questions, setQuestions, index, justCreated, choiceID }: {  questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, justCreated: boolean, choiceID: number }) {
+export default function ChoiceQuestionComponent({ questions, setQuestions, index, justCreated, provided }: {  questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, justCreated: boolean, provided: DraggableProvided }) {
     const [editMode, setEditMode] = useState(justCreated);
     const [deleted, setDeleted] = useState(false);
     const ref = useRef<HTMLDivElement | null>(null);
@@ -19,7 +21,7 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
             copy.splice(index, 1);
             // Disable input until the deletion in the database is confirmed
             setDeleted(true);
-            await DeleteChoice(choiceID);
+            await DeleteChoice(questions[index].data.id);
             setQuestions(copy);
             setDeleted(false);
         }
@@ -29,7 +31,7 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
         if (editMode != false && !deleted) {
             setEditMode(false);
             if (questions[index].type == 'Choice') {
-                UpdateChoiceQuestion(choiceID, questions[index].data.questionText, questions[index].data.options, questions[index].data.order_index);
+                UpdateChoiceQuestion(questions[index].data.id, questions[index].data.questionText, questions[index].data.options, questions[index].data.order_index);
             }
         }
     }
@@ -42,9 +44,9 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
     }
 
     return (
-        <div ref={ref} id={`choice-${choiceID}`} onClick={() => setEditMode(true)}>
+        <div ref={ref} onClick={() => setEditMode(true)} className="flex items-center">
             { editMode ?
-            <div className="flex flex-col bg-neutral-200 rounded-lg px-3 pb-2">
+            <div className="flex flex-col bg-neutral-200 rounded-lg px-0.5 sm:px-3 pb-2 flex-grow">
                 {/* We are in the edit mode here */}
                 <div className="flex w-full flex-grow justify-end py-2">
                     <button disabled={deleted} className="btn btn-ghost btn-circle disabled:bg-transparent disabled:opacity-50 disabled:text-black btn-sm" type="button" onClick={deleteCallback}><RiDeleteBin5Fill size={24} /></button>
@@ -92,7 +94,7 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
                             if (copy[index].type != "Choice") {
                                 return;
                             }
-                            const response = await CreateNewChoiceOption(choiceID, "", copy[index].data.options.length);
+                            const response = await CreateNewChoiceOption(questions[index].data.id, "", copy[index].data.options.length);
                             if (response == null)
                                 return;
                             copy[index].data.options.push(response);
@@ -101,7 +103,7 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
                     </div>
                 </div>
             </div> :
-            <div className="flex flex-col hover:bg-neutral-200 bg-neutral-100 rounded-lg p-6 gap-3 hover:cursor-pointer">
+            <div className="flex flex-col hover:bg-neutral-200 bg-neutral-100 rounded-lg p-3 sm:p-6 gap-3 hover:cursor-pointer flex-grow">
                 <p className="text-lg font-bold">{index + 1}. {questions[index].data.questionText}</p>
                 <div className="flex flex-col gap-3">
                     {questions[index].data.options.sort((a, b) => a.order_index - b.order_index).map((item, index) => {
@@ -116,6 +118,7 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
                     })}
                 </div>
             </div> }
+            <div {...provided.dragHandleProps}><RxDragHandleDots2 size={24} className="text-black" /></div>
         </div>
     );
 }

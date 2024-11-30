@@ -31,5 +31,6 @@ export const ratingQuestionTable = pgTable("rating_questions", {
     rating_question_id: serial('rating_question_id').notNull().primaryKey(),
     question: varchar('question', { length: 255 }),
     ratingLevels: integer('levels').default(5).notNull(),
-    orderIndex: integer('order_index').default(-1).notNull()
+    orderIndex: integer('order_index').default(-1).notNull(),
+    form_id: serial('form_id').references(() => formsTable.id, { onDelete: 'cascade' }).notNull()
 })

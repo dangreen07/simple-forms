@@ -7,15 +7,25 @@ import { eq, and } from "drizzle-orm";
 import { ChoiceData, OptionsData, question } from "./types";
 import { getSession } from "@auth0/nextjs-auth0";
 
+// Setup the database connection
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the enviroment variables file!");
+    throw Error("Database url is not set in the environment variables file!");
 }
 
 const db = drizzle(DATABASE_URL);
 
+/**
+ * Creates a new choice question with its options in the database.
+ * 
+ * @param formID - ID of the form to which the choice belongs.
+ * @param questionText - Text of the choice question.
+ * @param options - Array of option strings for the choice question.
+ * @param order_index - Order index for the question.
+ * @returns A promise that resolves to the newly created choice question data or null if credentials are invalid.
+ */
 export async function CreateNewChoicesQuestion(formID: number, questionText: string, options: string[], order_index: number): Promise<{ choicesID: number, options: OptionsData[], orderIndex: number } | null> {
-    if(!(await CredentialsValid(formID))) {
+    if (!(await CredentialsValid(formID))) {
         return null;
     }
     const response = await db.insert(choicesTable).values({
@@ -24,12 +34,10 @@ export async function CreateNewChoicesQuestion(formID: number, questionText: str
         choicesOrderIndex: order_index
     }).returning();
     if (response.length == 0) {
-        // Failed to insert choice question
         console.error("Failed to insert choice question!");
         return null;
     }
 
-    // Add the options
     const optionsResponse = await db.insert(choicesOptionsTable).values(options.map((current) => {
         return {
             choices_id: response[0].choices_id,
@@ -37,7 +45,6 @@ export async function CreateNewChoicesQuestion(formID: number, questionText: str
         };
     })).returning();
     if (optionsResponse.length != options.length) {
-        // Something went wrong inputting options!
         console.error("Error when inserting options!");
         return null;
     }
@@ -54,18 +61,24 @@ export async function CreateNewChoicesQuestion(formID: number, questionText: str
     }
 }
 
+/**
+ * Updates an existing choice question and its options.
+ * 
+ * @param choiceID - ID of the choice question to update.
+ * @param questionText - New text for the choice question.
+ * @param options - Array of updated options data for the choice question.
+ * @param order_index - New order index for the question.
+ * @returns A boolean indicating success or failure.
+ */
 export async function UpdateChoiceQuestion(choiceID: number, questionText: string, options: OptionsData[], order_index: number) {
-    // Credentials checking
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
     const user_id = user.sub;
-    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
+    const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
-        // Not authorized to access this resource
         return false;
     }
 
@@ -83,18 +96,23 @@ export async function UpdateChoiceQuestion(choiceID: number, questionText: strin
     return true;
 }
 
+/**
+ * Creates a new option for an existing choice question.
+ * 
+ * @param choiceID - ID of the choice question to add the option to.
+ * @param option - Option text.
+ * @param order_index - Order index for the option.
+ * @returns The created option data or null if not authorized.
+ */
 export async function CreateNewChoiceOption(choiceID: number, option: string, order_index: number): Promise<OptionsData | null> {
-    // Credentials checking
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return null;
     }
     const user = session.user;
     const user_id = user.sub;
-    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
+    const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
-        // Not authorized to access this resource
         return null;
     }
 
@@ -113,83 +131,88 @@ export async function CreateNewChoiceOption(choiceID: number, option: string, or
     }
 }
 
+/**
+ * Deletes an existing choice option.
+ * 
+ * @param option_id - ID of the option to delete.
+ * @returns A boolean indicating success or failure of the deletion.
+ */
 export async function DeleteChoiceOption(option_id: number): Promise<boolean> {
-    // Credentials checking
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
     const user_id = user.sub;
 
-    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).leftJoin(choicesOptionsTable, eq(choicesOptionsTable.choices_id, choicesTable.choices_id)).where(and(eq(formsTable.user_id, user_id), eq(choicesOptionsTable.option_id, option_id)));
+    const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).leftJoin(choicesOptionsTable, eq(choicesOptionsTable.choices_id, choicesTable.choices_id)).where(and(eq(formsTable.user_id, user_id), eq(choicesOptionsTable.option_id, option_id)));
     if (authData == undefined) {
         return false;
     }
     const response = await db.delete(choicesOptionsTable).where(eq(choicesOptionsTable.option_id, option_id));
-    if (response.rowCount == 1) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return response.rowCount == 1;
 }
 
+/**
+ * Deletes an existing choice question.
+ * 
+ * @param choices_id - ID of the choice question to delete.
+ * @returns A boolean indicating success or failure of the deletion.
+ */
 export async function DeleteChoice(choices_id: number): Promise<boolean> {
-    // Credentials checking
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
     const user_id = user.sub;
 
-    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
+    const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
         return false;
     }
     const response = await db.delete(choicesTable).where(eq(choicesTable.choices_id, choices_id));
-    if (response.rowCount == 1) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return response.rowCount == 1;
 }
 
+/**
+ * Updates the order index of an existing choice question.
+ * 
+ * @param choices_id - ID of the choice question to update.
+ * @param order_index - New order index for the choice question.
+ * @returns A boolean indicating success or failure of the update.
+ */
 export async function UpdateChoiceOrderIndex(choices_id: number, order_index: number) {
-    // Credentials checking
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
     const user_id = user.sub;
 
-    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
+    const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
         return false;
     }
     const response = await db.update(choicesTable).set({
         choicesOrderIndex: order_index
     }).where(eq(choicesTable.choices_id, choices_id));
-    if (response.rowCount == 0) {
-        return false;
-    }
-    return true;
+    return response.rowCount != 0;
 }
 
+/**
+ * Retrieves choice data for a form.
+ * 
+ * @param id - ID of the form to retrieve data for.
+ * @param user_id - User ID for authentication.
+ * @returns An object containing the structured choice data and form name.
+ */
 export async function GetChoicesData(id: number, user_id: string) {
     const formData = await db.select({
         formName: formsTable.name,
-        // Choices
         choices_id: choicesTable.choices_id,
         choices_question: choicesTable.question,
         choices_order_index: choicesTable.choicesOrderIndex,
-        // Choices options
         option_id: choicesOptionsTable.option_id,
         option: choicesOptionsTable.option,
         option_order_index: choicesOptionsTable.orderIndex,
@@ -197,9 +220,8 @@ export async function GetChoicesData(id: number, user_id: string) {
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
     )).leftJoin(choicesTable, eq(choicesTable.form_id, id)).leftJoin(choicesOptionsTable, eq(choicesOptionsTable.choices_id, choicesTable.choices_id));
-    // Format the raw sql data into something the client will understand
+
     if (formData.length == 0) {
-        // No form was found
         return {
             output: [],
             formName: ""
@@ -210,6 +232,12 @@ export async function GetChoicesData(id: number, user_id: string) {
     return { output: output, formName: formName };
 }
 
+/**
+ * Processes raw form data from the database into a structured format.
+ * 
+ * @param formData - Array of raw data from SQL query.
+ * @returns An array of questions formatted for the client.
+ */
 function ChoicesDataProcess(formData: {
     choices_id: number | null;
     choices_question: string | null;
@@ -229,18 +257,17 @@ function ChoicesDataProcess(formData: {
             }
         });
         if (itemIndex != -1) {
-            // Any of the values in the choices array are the same as the current element
             optionsList.push({
                 id: element.option_id ?? -1,
                 option: element.option ?? "",
                 order_index: element.option_order_index ?? -1
             });
             choices[itemIndex] = {
-                id: element.choices_id??0,
-                questionText: element.choices_question??"",
+                id: element.choices_id ?? 0,
+                questionText: element.choices_question ?? "",
                 options: optionsList,
                 editMode: false,
-                order_index: element.choices_order_index??-1,
+                order_index: element.choices_order_index ?? -1,
             };
         }
         else {
@@ -252,7 +279,6 @@ function ChoicesDataProcess(formData: {
                 });
             }
             if (element.choices_id != null) {
-                // There are no choices here
                 choices.push({
                     id: element.choices_id,
                     questionText: element.choices_question ?? "",

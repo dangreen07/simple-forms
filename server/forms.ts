@@ -6,6 +6,7 @@ import { formsTable } from "@/db/schema";
 import { eq, and } from 'drizzle-orm';
 import { GetTextQuestionsData } from "./textQuestions";
 import { GetChoicesData } from "./choices";
+import { GetRatingQuestionsData } from "./ratings";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 if (DATABASE_URL == "") {
@@ -15,9 +16,10 @@ if (DATABASE_URL == "") {
 const db = drizzle(DATABASE_URL);
 
 /**
+ * Retrieves the name of a form by its ID for the authenticated user.
  * 
- * @param id The form id
- * @returns The form name
+ * @param id - The form ID.
+ * @returns The form name or an empty string if not found or unauthorized.
  */
 export async function GetFormName(id: number): Promise<string> {
     const session = await getSession();
@@ -39,6 +41,12 @@ export async function GetFormName(id: number): Promise<string> {
     return output.name;
 }
 
+/**
+ * Retrieves all questions related to a form for the authenticated user.
+ * 
+ * @param id - The form ID.
+ * @returns An object containing the form name and questions or null if unauthorized.
+ */
 export async function GetFormData(id: number) {
     const session = await getSession();
     if (session == null) {
@@ -52,12 +60,20 @@ export async function GetFormData(id: number) {
     output.push(...choicesOutput);
     const textQuestionsOutput = await GetTextQuestionsData(id, user_id);
     output.push(...textQuestionsOutput);
+    const ratingQuestionsOutput = await GetRatingQuestionsData(id, user_id);
+    output.push(...ratingQuestionsOutput);
     return {
         formName: formName,
         questions: output
     };
 }
 
+/**
+ * Creates a new form for the authenticated user and returns the form ID.
+ * 
+ * @param name - The name of the new form.
+ * @returns The ID of the newly created form or null if unauthorized.
+ */
 export async function CreateNewForm(name: string): Promise<number | null> {
     const session = await getSession();
     if (session == null) {
@@ -75,6 +91,11 @@ export async function CreateNewForm(name: string): Promise<number | null> {
     return formID;
 }
 
+/**
+ * Retrieves all forms associated with the authenticated user.
+ * 
+ * @returns An array of objects each containing the form ID and name.
+ */
 export async function GetForms() {
     const session = await getSession();
     if (session == null) {
@@ -93,6 +114,13 @@ export async function GetForms() {
     });
 }
 
+/**
+ * Updates the title of a specific form for the authenticated user.
+ * 
+ * @param formID - The ID of the form to update.
+ * @param formTitle - The new title for the form.
+ * @returns true if the update was successful, false otherwise.
+ */
 export async function UpdateFormTitle(formID: number, formTitle: string) {
     const session = await getSession();
     if (session == null) {
