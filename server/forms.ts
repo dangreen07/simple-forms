@@ -3,7 +3,7 @@
 import { getSession } from "@auth0/nextjs-auth0";
 import { ChoiceData, OptionsData, question } from "./types";
 import { drizzle } from "drizzle-orm/neon-http";
-import { choicesOptionsTable, choicesTable, formsTable } from "@/db/schema";
+import { choicesOptionsTable, choicesTable, formsTable, textQuestionsTable } from "@/db/schema";
 import { eq, and } from 'drizzle-orm';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
@@ -46,16 +46,65 @@ export async function GetFormData(id: number) {
     }
     const user = session.user;
     const user_id = user.sub;
+    const output = [];
+    const { output: choicesOutput, formName } = await GetChoicesData(id, user_id);
+    output.push(...choicesOutput);
+    const textQuestionsOutput = await GetTextQuestionsData(id, user_id);
+    output.push(...textQuestionsOutput);
+    return {
+        formName: formName,
+        questions: output
+    };
+}
+
+async function GetTextQuestionsData(id: number, user_id: string) {
     const formData = await db.select({
-        formID: formsTable.id,
+        text_id: textQuestionsTable.text_question_id,
+        question: textQuestionsTable.question,
+        order_index: textQuestionsTable.textOrderIndex
+    }).from(formsTable).where(and(
+        eq(formsTable.id, id),
+        eq(formsTable.user_id, user_id)
+    )).leftJoin(textQuestionsTable, eq(textQuestionsTable.form_id, formsTable.id));
+    if (formData.length == 0) {
+        return [];
+    }
+    const output = TextDataProcess(formData);
+    return output;
+}
+
+// text_question_id: textQuestionsTable.text_question_id,
+// text_question: textQuestionsTable.question,
+// text_order_id: textQuestionsTable.textOrderIndex
+
+function TextDataProcess(formData: {
+    text_id: number | null;
+    question: string | null;
+    order_index: number | null;
+}[]): question[] {
+    return formData.filter((current) => current.text_id != null).map((element) => {
+        return {
+            type: 'Text',
+            data: {
+                textId: element.text_id??-1,
+                questionText: element.question??"",
+                order_index: element.order_index??-1
+            }
+        }
+    })
+}
+
+async function GetChoicesData(id: number, user_id: string) {
+    const formData = await db.select({
         formName: formsTable.name,
-        user_id: formsTable.user_id,
+        // Choices
         choices_id: choicesTable.choices_id,
-        question: choicesTable.question,
+        choices_question: choicesTable.question,
+        choices_order_index: choicesTable.choicesOrderIndex,
+        // Choices options
         option_id: choicesOptionsTable.option_id,
         option: choicesOptionsTable.option,
         option_order_index: choicesOptionsTable.orderIndex,
-        choices_order_index: choicesTable.choicesOrderIndex
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -63,9 +112,24 @@ export async function GetFormData(id: number) {
     // Format the raw sql data into something the client will understand
     if (formData.length == 0) {
         // No form was found
-        return null;
+        return {
+            output: [],
+            formName: ""
+        }
     }
     const formName = formData[0].formName ?? "";
+    const output = ChoicesDataProcess(formData);
+    return { output: output, formName: formName };
+}
+
+function ChoicesDataProcess(formData: {
+    choices_id: number | null;
+    choices_question: string | null;
+    choices_order_index: number | null;
+    option_id: number | null;
+    option: string | null;
+    option_order_index: number | null;
+}[]) {
     const choices: ChoiceData[] = [];
     formData.forEach(element => {
         let optionsList: OptionsData[] = [];
@@ -85,7 +149,7 @@ export async function GetFormData(id: number) {
             });
             choices[itemIndex] = {
                 choiceId: element.choices_id??0,
-                questionText: element.question??"",
+                questionText: element.choices_question??"",
                 options: optionsList,
                 editMode: false,
                 order_index: element.choices_order_index??-1,
@@ -103,7 +167,7 @@ export async function GetFormData(id: number) {
                 // There are no choices here
                 choices.push({
                     choiceId: element.choices_id,
-                    questionText: element.question ?? "",
+                    questionText: element.choices_question ?? "",
                     options: optionsList,
                     editMode: false,
                     order_index: element.choices_order_index ?? -1,
@@ -117,12 +181,8 @@ export async function GetFormData(id: number) {
             data: current
         }
     });
-    return {
-        formName: formName,
-        questions: output
-    };
+    return output;
 }
-
 
 export async function CreateNewForm(name: string): Promise<number | null> {
     const session = await getSession();

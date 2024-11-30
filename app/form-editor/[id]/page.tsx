@@ -16,10 +16,12 @@ export default async function Page({ params }: {params: { id: string } }) {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-300 to-green-300 bg-fixed">
-            <div className="fixed top-0 w-full"><NavigationAnyAccess checkSession={false} /></div>
+        <div className="flex flex-col min-h-screen bg-white">
+            <div className="fixed top-0 w-full"><NavigationAnyAccess checkSession={false} background="bg-blue-300" textColor="text-gray-800" /></div>
             <div className="pt-24"></div>
+            <div className="flex flex-grow bg-gradient-to-b from-blue-300 to-green-300 bg-fixed">
             <FormEditor initialFormName={formName} initialQuestions={questions} formID={Number(params.id)} />
+            </div>
         </div>
     )
 }

@@ -8,8 +8,10 @@ import { MdOutlineRadioButtonChecked } from "react-icons/md";
 import { PiTextTBold } from "react-icons/pi";
 import ChoiceCreation, { useClickOutside } from "./ChoiceCreation";
 import { question } from "@/server/types";
-import { CreateNewChoicesQuestion } from "@/server/choices";
+import { CreateNewChoicesQuestion, UpdateChoiceOrderIndex } from "@/server/choices";
 import { UpdateFormTitle } from "@/server/forms";
+import TextQuestionCreation from "./TextQuestionCreation";
+import { CreateNewTextQuestion, UpdateTextQuestionOrderIndex } from "@/server/textQuestions";
 
 export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: number }) {
     const [formName, setFormName] = useState(initialFormName);
@@ -17,6 +19,7 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
     const [justCreatedIndex, setJustCreatedIndex] = useState(-1);
     const titleRef = useRef<HTMLInputElement | null>(null);
     const [editingTitle, setEditingTitle] = useState(false);
+    const [waitingForNewQuestionResponse, setWaitingForNewQuestionResponse] = useState(false);
 
     async function saveTitleToDatabase() {
         if (editingTitle) {
@@ -38,16 +41,13 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                         }} className="text-3xl sm:text-5xl font-semibold bg-neutral-100 border-none outline-none" placeholder="Form title here..." />
                         {questions.sort((a,b) => a.data.order_index - b.data.order_index).map((current, index) => {
                             if (current.type == "Choice") {
-                                if (questions[index].data.order_index == -1) {
+                                if (current.data.order_index != index) {
                                     questions[index].data.order_index = index;
+                                    // Update the database
+                                    UpdateChoiceOrderIndex(current.data.choiceId, index);
                                 }
                                 return (
                                     <ChoiceCreation key={index}
-                                        deleteMeCallback={() => {
-                                            const copy = [...questions];
-                                            copy.splice(index, 1);
-                                            setQuestions(copy);
-                                        }}
                                         questions={questions}
                                         setQuestions={setQuestions}
                                         index={index}
@@ -56,18 +56,34 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     />
                                 );
                             }
-                            else {
-                                // Not Implemented
-                                return (<div key={index}></div>);
+                            else if (current.type == 'Text') {
+                                if (questions[index].data.order_index != index) {
+                                    questions[index].data.order_index = index;
+                                    UpdateTextQuestionOrderIndex(current.data.textId, index);
+                                }
+                                return (
+                                    <TextQuestionCreation
+                                        key={index} 
+                                        questions={questions}
+                                        setQuestions={setQuestions}
+                                        index={index}
+                                        justCreated={index == justCreatedIndex}
+                                    />
+                                )
                             }
                         })}
-                        <div id="add-new-question" className="flex flex-col gap-3">
-                            <button id="add-new-question-button" className="w-fit flex items-center gap-2" type="button" onClick={() => {
+                        <div id="add-new-question" className="flex flex-col gap-4">
+                            <button disabled={waitingForNewQuestionResponse} id="add-new-question-button" className="w-fit flex items-center gap-2" type="button" onClick={() => {
                                 const content = document.getElementById("add-new-question-content") as HTMLDivElement;
                                 if (content.style.display === "grid") {
                                     content.style.display = "none";
                                 } else {
                                     content.style.display = "grid";
+                                    window.scrollTo({
+                                        top: document.body.scrollHeight,
+                                        left: 0,
+                                        behavior: 'smooth'
+                                    });
                                 }
                             }}>
                                 <span className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-primary-content">
@@ -77,10 +93,17 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                             </button>
                             <div id="add-new-question-content" className="px-3 duration-200 hidden gap-4 grid-cols-3">
                                 <button className="btn btn-accent rounded-full" onClick={async () => {
-                                    document.getElementById("add-new-question-button")?.click();
+                                    const content = document.getElementById("add-new-question-content") as HTMLDivElement;
+                                    if (content.style.display === "grid") {
+                                        content.style.display = "none";
+                                    } else {
+                                        content.style.display = "grid";
+                                    }
                                     const copy = [...questions];
-                                    const response = await CreateNewChoicesQuestion(formID, "Question", ["Option 1", "Option 2"], questions.filter((current) => current.type == 'Choice').length);
+                                    setWaitingForNewQuestionResponse(true);
+                                    const response = await CreateNewChoicesQuestion(formID, "Question", ["Option 1", "Option 2"], questions.length);
                                     if (response == null)
+                                        // Give error to the user
                                         return;
                                     const current: question = {
                                         type: "Choice",
@@ -95,13 +118,36 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     copy.push(current);
                                     setQuestions(copy);
                                     setJustCreatedIndex(copy.length - 1);
+                                    setWaitingForNewQuestionResponse(false);
                                 }}>
                                     <span className="flex items-center justify-center">
                                         <MdOutlineRadioButtonChecked size={24} />
                                     </span>
                                     <span className="font-semibold text-lg">Choice</span>
                                 </button>
-                                <button className="btn btn-accent rounded-full ">
+                                <button className="btn btn-accent rounded-full" onClick={async () => {
+                                    const content = document.getElementById("add-new-question-content") as HTMLDivElement;
+                                    if (content.style.display === "grid") {
+                                        content.style.display = "none";
+                                    } else {
+                                        content.style.display = "grid";
+                                    }
+                                    const copy = [...questions];
+                                    setWaitingForNewQuestionResponse(true);
+                                    const response = await CreateNewTextQuestion(formID, "Question", questions.length);
+                                    if (response == null) {
+                                        // Give error to the user
+                                        return;
+                                    }
+                                    const current: question = {
+                                        type: 'Text',
+                                        data: response
+                                    };
+                                    copy.push(current);
+                                    setQuestions(copy);
+                                    setJustCreatedIndex(copy.length - 1);
+                                    setWaitingForNewQuestionResponse(false);
+                                }}>
                                     <span className="flex items-center justify-center">
                                         <PiTextTBold size={24} />
                                     </span>

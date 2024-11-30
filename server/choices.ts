@@ -59,14 +59,14 @@ export async function UpdateChoiceQuestion(choiceID: number, questionText: strin
     const session = await getSession();
     if (session == null) {
         // User not defined
-        return null;
+        return false;
     }
     const user = session.user;
     const user_id = user.sub;
     const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
         // Not authorized to access this resource
-        return null;
+        return false;
     }
 
     await db.update(choicesTable).set({
@@ -80,6 +80,7 @@ export async function UpdateChoiceQuestion(choiceID: number, questionText: strin
             orderIndex: current.order_index
         }).where(eq(choicesOptionsTable.option_id, current.option_id));
     }));
+    return true;
 }
 
 export async function CreateNewChoiceOption(choiceID: number, option: string, order_index: number): Promise<OptionsData | null> {
@@ -133,4 +134,50 @@ export async function DeleteChoiceOption(option_id: number): Promise<boolean> {
     else {
         return false;
     }
+}
+
+export async function DeleteChoice(choices_id: number): Promise<boolean> {
+    // Credentials checking
+    const session = await getSession();
+    if (session == null) {
+        // User not defined
+        return false;
+    }
+    const user = session.user;
+    const user_id = user.sub;
+
+    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
+    if (authData == undefined) {
+        return false;
+    }
+    const response = await db.delete(choicesTable).where(eq(choicesTable.choices_id, choices_id));
+    if (response.rowCount == 1) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+export async function UpdateChoiceOrderIndex(choices_id: number, order_index: number) {
+    // Credentials checking
+    const session = await getSession();
+    if (session == null) {
+        // User not defined
+        return false;
+    }
+    const user = session.user;
+    const user_id = user.sub;
+
+    const [ authData ] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
+    if (authData == undefined) {
+        return false;
+    }
+    const response = await db.update(choicesTable).set({
+        choicesOrderIndex: order_index
+    }).where(eq(choicesTable.choices_id, choices_id));
+    if (response.rowCount == 0) {
+        return false;
+    }
+    return true;
 }

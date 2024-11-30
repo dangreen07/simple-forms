@@ -21,6 +21,7 @@ export type OptionsData = {
 }
 
 export type TextData = {
+    textId: number,
     questionText: string,
     order_index: number
 }

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "drizzle-kit push --config=dribble.config.ts"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3.5.0",
@@ -17,6 +18,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^5.3.0",
+    "react-textarea-autosize": "^8.5.5",
     "simple-forms": "file:",
     "uuid": "^11.0.3"
   },

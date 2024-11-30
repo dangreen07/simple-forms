@@ -15,7 +15,14 @@ export const choicesTable = pgTable("choices", {
 
 export const choicesOptionsTable = pgTable("choices_options", {
     option_id: serial('option_id').notNull().primaryKey(),
-    option: varchar('option', { length: 255 }),
+    option: varchar('option'),
     choices_id: serial('choices_id').notNull().references(() => choicesTable.choices_id, { onDelete: 'cascade' }),
     orderIndex: integer('order_index').default(-1).notNull()
 });
+
+export const textQuestionsTable = pgTable("text_questions", {
+    text_question_id: serial('text_question_id').notNull().primaryKey(),
+    question: varchar('question', { length: 255 }),
+    form_id: serial('form_id').references(() => formsTable.id, { onDelete: 'cascade' }).notNull(),
+    textOrderIndex: integer('order_index').default(0).notNull()
+})

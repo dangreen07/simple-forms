@@ -11,7 +11,7 @@ export default function YourForms({ forms } : { forms: {
     const router = useRouter();
 
     return (
-        <div className="flex flex-col gap-2 max-w-3xl mx-auto">
+        <div className="flex flex-col gap-4 max-w-3xl mx-auto">
             <div className="px-5 py-3 flex justify-between items-center">
                 <p className="text-4xl text-black font-bold">Your Forms</p>
                 <button onClick={async () => {
