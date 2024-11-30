@@ -4,10 +4,13 @@ export type question = {
 } | {
     type: "Text",
     data: TextData
+} | {
+    type: 'Rating',
+    data: RatingData
 };
 
 export type ChoiceData = {
-    choiceId: number,
+    id: number,
     questionText: string,
     options: OptionsData[],
     editMode: boolean,
@@ -15,13 +18,20 @@ export type ChoiceData = {
 };
 
 export type OptionsData = {
-    option_id: number,
+    id: number,
     option: string,
     order_index: number
 }
 
 export type TextData = {
-    textId: number,
+    id: number,
     questionText: string,
+    order_index: number
+}
+
+export type RatingData = {
+    id: number,
+    questionText: string,
+    ratingsLevel: number,
     order_index: number
 }

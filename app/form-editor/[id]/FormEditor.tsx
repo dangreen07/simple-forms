@@ -6,12 +6,13 @@ import { FiPlus } from "react-icons/fi";
 import { LuArrowDownUp } from "react-icons/lu";
 import { MdOutlineRadioButtonChecked } from "react-icons/md";
 import { PiTextTBold } from "react-icons/pi";
-import ChoiceCreation, { useClickOutside } from "./ChoiceCreation";
 import { question } from "@/server/types";
 import { CreateNewChoicesQuestion, UpdateChoiceOrderIndex } from "@/server/choices";
 import { UpdateFormTitle } from "@/server/forms";
 import TextQuestionCreation from "./TextQuestionCreation";
 import { CreateNewTextQuestion, UpdateTextQuestionOrderIndex } from "@/server/textQuestions";
+import ChoiceQuestionComponent, { useClickOutside } from "./ChoiceQuestionComponent";
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 
 export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: number }) {
     const [formName, setFormName] = useState(initialFormName);
@@ -30,6 +31,71 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
 
     useClickOutside(titleRef, saveTitleToDatabase);
 
+    function onDragEnd(result: DropResult) {
+        // dropped outside the list
+        if (!result.destination) {
+            console.log("Invalid location!");
+            return;
+        }
+
+        const copy = [...questions.sort((a,b) => a.data.order_index - b.data.order_index)];
+        const [ temp ] = copy.splice(result.source.index, 1); // Remove it
+        const copy2 = [...copy.slice(0, result.destination.index), temp, ...copy.slice(result.destination.index)]
+        // Reorganise and sync the change to the database
+        for (let i = 0; i < copy2.length; i++) {
+            if (copy2[i].data.order_index != i) {
+                if (copy2[i].type == 'Choice') {
+                    copy2[i].data.order_index = i;
+                    // Update the database
+                    UpdateChoiceOrderIndex(copy2[i].data.id, i);
+                }
+                else if (copy2[i].type == "Text") {
+                    copy2[i].data.order_index = i;
+                    UpdateTextQuestionOrderIndex(copy2[i].data.id, i);
+                }
+            }
+        }
+        setQuestions(copy2);
+    }
+
+    function outputQuestionsList(current: question, index: number) {
+        if (current.type == "Choice") {
+            if (current.data.order_index != index) {
+                const copy = [...questions];
+                copy[index].data.order_index = index;
+                setQuestions(copy);
+                // Update the database
+                UpdateChoiceOrderIndex(current.data.id, index);
+            }
+            return (
+                <ChoiceQuestionComponent key={index}
+                    questions={questions}
+                    setQuestions={setQuestions}
+                    index={index}
+                    justCreated={index == justCreatedIndex}
+                    choiceID={current.data.id}
+                />
+            );
+        }
+        else if (current.type == 'Text') {
+            if (questions[index].data.order_index != index) {
+                const copy = [...questions];
+                copy[index].data.order_index = index;
+                setQuestions(copy);
+                UpdateTextQuestionOrderIndex(current.data.id, index);
+            }
+            return (
+                <TextQuestionCreation
+                    key={index} 
+                    questions={questions}
+                    setQuestions={setQuestions}
+                    index={index}
+                    justCreated={index == justCreatedIndex}
+                />
+            )
+        }
+    }
+
     return (
         <div className="flex flex-col flex-grow">
             <div className="flex h-full flex-grow justify-center">
@@ -39,39 +105,31 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                             setEditingTitle(true);
                             setFormName(current.target.value);
                         }} className="text-3xl sm:text-5xl font-semibold bg-neutral-100 border-none outline-none" placeholder="Form title here..." />
-                        {questions.sort((a,b) => a.data.order_index - b.data.order_index).map((current, index) => {
-                            if (current.type == "Choice") {
-                                if (current.data.order_index != index) {
-                                    questions[index].data.order_index = index;
-                                    // Update the database
-                                    UpdateChoiceOrderIndex(current.data.choiceId, index);
-                                }
-                                return (
-                                    <ChoiceCreation key={index}
-                                        questions={questions}
-                                        setQuestions={setQuestions}
-                                        index={index}
-                                        justCreated={index == justCreatedIndex}
-                                        choiceID={current.data.choiceId}
-                                    />
-                                );
-                            }
-                            else if (current.type == 'Text') {
-                                if (questions[index].data.order_index != index) {
-                                    questions[index].data.order_index = index;
-                                    UpdateTextQuestionOrderIndex(current.data.textId, index);
-                                }
-                                return (
-                                    <TextQuestionCreation
-                                        key={index} 
-                                        questions={questions}
-                                        setQuestions={setQuestions}
-                                        index={index}
-                                        justCreated={index == justCreatedIndex}
-                                    />
-                                )
-                            }
-                        })}
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="droppable">
+                                {(provided) => (
+                                    <div
+                                        {...provided.droppableProps}
+                                        ref={provided.innerRef}
+                                    >
+                                        {questions.sort((a,b) => a.data.order_index - b.data.order_index).map((current, index) => (
+                                            <Draggable key={current.data.id} draggableId={current.data.id.toString()} index={index}>
+                                            {(provided) => (
+                                                <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                >
+                                                    {outputQuestionsList(current,index)}
+                                                </div>
+                                            )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
                         <div id="add-new-question" className="flex flex-col gap-4">
                             <button disabled={waitingForNewQuestionResponse} id="add-new-question-button" className="w-fit flex items-center gap-2" type="button" onClick={() => {
                                 const content = document.getElementById("add-new-question-content") as HTMLDivElement;
@@ -108,7 +166,7 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     const current: question = {
                                         type: "Choice",
                                         data: {
-                                            choiceId: response.choicesID,
+                                            id: response.choicesID,
                                             questionText: "Question",
                                             options: response.options,
                                             editMode: true,

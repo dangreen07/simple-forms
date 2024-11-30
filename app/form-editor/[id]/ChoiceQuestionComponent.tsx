@@ -8,7 +8,7 @@ import { MdOutlineRadioButtonChecked, MdOutlineRadioButtonUnchecked } from "reac
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import TextareaAutosize from 'react-textarea-autosize';
 
-export default function ChoiceCreation({ questions, setQuestions, index, justCreated, choiceID }: {  questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, justCreated: boolean, choiceID: number }) {
+export default function ChoiceQuestionComponent({ questions, setQuestions, index, justCreated, choiceID }: {  questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, justCreated: boolean, choiceID: number }) {
     const [editMode, setEditMode] = useState(justCreated);
     const [deleted, setDeleted] = useState(false);
     const ref = useRef<HTMLDivElement | null>(null);
@@ -80,7 +80,7 @@ export default function ChoiceCreation({ questions, setQuestions, index, justCre
                                         if (copy[index].type != "Choice") {
                                             return;
                                         }
-                                        DeleteChoiceOption(copy[index].data.options[i].option_id);
+                                        DeleteChoiceOption(copy[index].data.options[i].id);
                                         copy[index].data.options.splice(i,1);
                                         setQuestions(copy);
                                     }}><RiDeleteBin5Fill size={24} /></button>

@@ -4,7 +4,7 @@ import { choicesOptionsTable, choicesTable, formsTable } from "@/db/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { CredentialsValid } from "./auth";
 import { eq, and } from "drizzle-orm";
-import { OptionsData } from "./types";
+import { ChoiceData, OptionsData, question } from "./types";
 import { getSession } from "@auth0/nextjs-auth0";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
@@ -45,7 +45,7 @@ export async function CreateNewChoicesQuestion(formID: number, questionText: str
         choicesID: response[0].choices_id,
         options: optionsResponse.map((current) => {
             return {
-                option_id: current.option_id,
+                id: current.option_id,
                 option: current.option ?? "",
                 order_index: current.orderIndex
             }
@@ -78,7 +78,7 @@ export async function UpdateChoiceQuestion(choiceID: number, questionText: strin
         return db.update(choicesOptionsTable).set({
             option: current.option,
             orderIndex: current.order_index
-        }).where(eq(choicesOptionsTable.option_id, current.option_id));
+        }).where(eq(choicesOptionsTable.option_id, current.id));
     }));
     return true;
 }
@@ -107,7 +107,7 @@ export async function CreateNewChoiceOption(choiceID: number, option: string, or
         return null;
     }
     return {
-        option_id: response[0].option_id,
+        id: response[0].option_id,
         option: response[0].option ?? "",
         order_index: response[0].orderIndex
     }
@@ -180,4 +180,94 @@ export async function UpdateChoiceOrderIndex(choices_id: number, order_index: nu
         return false;
     }
     return true;
+}
+
+export async function GetChoicesData(id: number, user_id: string) {
+    const formData = await db.select({
+        formName: formsTable.name,
+        // Choices
+        choices_id: choicesTable.choices_id,
+        choices_question: choicesTable.question,
+        choices_order_index: choicesTable.choicesOrderIndex,
+        // Choices options
+        option_id: choicesOptionsTable.option_id,
+        option: choicesOptionsTable.option,
+        option_order_index: choicesOptionsTable.orderIndex,
+    }).from(formsTable).where(and(
+        eq(formsTable.id, id),
+        eq(formsTable.user_id, user_id)
+    )).leftJoin(choicesTable, eq(choicesTable.form_id, id)).leftJoin(choicesOptionsTable, eq(choicesOptionsTable.choices_id, choicesTable.choices_id));
+    // Format the raw sql data into something the client will understand
+    if (formData.length == 0) {
+        // No form was found
+        return {
+            output: [],
+            formName: ""
+        }
+    }
+    const formName = formData[0].formName ?? "";
+    const output = ChoicesDataProcess(formData);
+    return { output: output, formName: formName };
+}
+
+function ChoicesDataProcess(formData: {
+    choices_id: number | null;
+    choices_question: string | null;
+    choices_order_index: number | null;
+    option_id: number | null;
+    option: string | null;
+    option_order_index: number | null;
+}[]) {
+    const choices: ChoiceData[] = [];
+    formData.forEach(element => {
+        let optionsList: OptionsData[] = [];
+        let itemIndex = -1;
+        choices.forEach((item, index) => {
+            if (item.id == element.choices_id) {
+                itemIndex = index;
+                optionsList = item.options;
+            }
+        });
+        if (itemIndex != -1) {
+            // Any of the values in the choices array are the same as the current element
+            optionsList.push({
+                id: element.option_id ?? -1,
+                option: element.option ?? "",
+                order_index: element.option_order_index ?? -1
+            });
+            choices[itemIndex] = {
+                id: element.choices_id??0,
+                questionText: element.choices_question??"",
+                options: optionsList,
+                editMode: false,
+                order_index: element.choices_order_index??-1,
+            };
+        }
+        else {
+            if (element.option != null) {
+                optionsList.push({
+                    id: element.option_id ?? -1,
+                    option: element.option ?? "",
+                    order_index: element.option_order_index ?? -1,
+                });
+            }
+            if (element.choices_id != null) {
+                // There are no choices here
+                choices.push({
+                    id: element.choices_id,
+                    questionText: element.choices_question ?? "",
+                    options: optionsList,
+                    editMode: false,
+                    order_index: element.choices_order_index ?? -1,
+                });
+            }
+        }
+    });
+    const output: question[] = choices.map((current) => {
+        return {
+            type: "Choice",
+            data: current
+        }
+    });
+    return output;
 }

@@ -4,8 +4,8 @@ import { question } from "@/server/types";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import TextareaAutosize from 'react-textarea-autosize';
-import { useClickOutside } from "./ChoiceCreation";
 import { DeleteTextQuestion, UpdateTextQuestion } from "@/server/textQuestions";
+import { useClickOutside } from "./ChoiceQuestionComponent";
 
 export default function TextQuestionCreation({ justCreated, questions, setQuestions, index }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number }) {
     const [editMode, setEditMode] = useState(justCreated);
@@ -18,7 +18,7 @@ export default function TextQuestionCreation({ justCreated, questions, setQuesti
             copy.splice(index, 1);
             // Disable input until the deletion in the database is confirmed
             setDeleted(true);
-            await DeleteTextQuestion(questions[index].data.textId);
+            await DeleteTextQuestion(questions[index].data.id);
             setQuestions(copy);
             setDeleted(false);
         }
@@ -28,7 +28,7 @@ export default function TextQuestionCreation({ justCreated, questions, setQuesti
         if (editMode != false && !deleted) {
             setEditMode(false);
             if (questions[index].type == 'Text') {
-                UpdateTextQuestion(questions[index].data.textId, questions[index].data.questionText, questions[index].data.order_index);
+                UpdateTextQuestion(questions[index].data.id, questions[index].data.questionText, questions[index].data.order_index);
             }
         }
     }
