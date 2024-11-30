@@ -35,3 +35,10 @@ export type RatingData = {
     ratingsLevel: number,
     order_index: number
 }
+
+export type DateData = {
+    id: number,
+    questionText: string,
+    date: string,
+    order_index: number
+}

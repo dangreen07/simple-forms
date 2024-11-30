@@ -54,7 +54,7 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
                 <div className="flex gap-2">
                     <p className="text-xl font-bold py-1">{index + 1}.</p>
                     <div className="flex flex-col gap-3 flex-grow">
-                        <input disabled={deleted} type="text" className="outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
+                        <TextareaAutosize disabled={deleted} className="resize-none outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black w-fill" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
                             const copy = [...questions];
                             copy[index].data.questionText = current.target.value;
                             setQuestions(copy);

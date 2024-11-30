@@ -206,7 +206,7 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     <span className="flex items-center justify-center">
                                         <MdOutlineRadioButtonChecked size={24} />
                                     </span>
-                                    <span className="font-semibold text-lg">Choice</span>
+                                    <span className="font-semibold text-lg hidden sm:block">Choice</span>
                                 </button>
                                 <button className="btn btn-accent rounded-full" onClick={async () => {
                                     const content = document.getElementById("add-new-question-content") as HTMLDivElement;
@@ -234,7 +234,7 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     <span className="flex items-center justify-center">
                                         <PiTextTBold size={24} />
                                     </span>
-                                    <span className="font-semibold text-lg">Text</span>
+                                    <span className="font-semibold text-lg hidden sm:block">Text</span>
                                 </button>
                                 <button className="btn btn-accent rounded-full" onClick={async() => {
                                     const content = document.getElementById("add-new-question-content") as HTMLDivElement;
@@ -262,19 +262,19 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     <span className="flex items-center justify-center">
                                         <FaRegThumbsUp size={24} />
                                     </span>
-                                    <span className="font-semibold text-lg">Rating</span>
+                                    <span className="font-semibold text-lg hidden sm:block">Rating</span>
                                 </button>
                                 <button className="btn btn-accent rounded-full ">
                                     <span className="flex items-center justify-center">
                                         <FaRegCalendarDays size={24} />
                                     </span>
-                                    <span className="font-semibold text-lg">Date</span>
+                                    <span className="font-semibold text-lg hidden sm:block">Date</span>
                                 </button>
                                 <button className="btn btn-accent rounded-full ">
                                     <span className="flex items-center justify-center">
                                         <LuArrowDownUp size={24} />
                                     </span>
-                                    <span className="font-semibold text-lg">Ranking</span>
+                                    <span className="font-semibold text-lg hidden sm:block">Ranking</span>
                                 </button>
                             </div>
                         </div>

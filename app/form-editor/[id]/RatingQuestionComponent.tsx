@@ -8,6 +8,7 @@ import { useClickOutside } from "./ChoiceQuestionComponent";
 import { TiStarOutline } from "react-icons/ti";
 import { DraggableProvided } from "@hello-pangea/dnd";
 import { RxDragHandleDots2 } from "react-icons/rx";
+import TextareaAutosize from 'react-textarea-autosize';
 
 export default function RatingQuestionComponent({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
     const [editMode, setEditMode] = useState(justCreated);
@@ -61,12 +62,12 @@ export default function RatingQuestionComponent({ justCreated, questions, setQue
                 <div className="flex gap-2">
                     <p className="text-xl font-bold py-1">{index + 1}.</p>
                     <div className="flex flex-col gap-3 flex-grow">
-                        <input disabled={deleted} type="text" className="outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
+                        <TextareaAutosize disabled={deleted} className="w-full resize-none outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
                             const copy = [...questions];
                             copy[index].data.questionText = current.target.value;
                             setQuestions(copy);
                         }} />
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 flex-wrap">
                             {Array.from({ length: questions[index].data.ratingsLevel }, (_, i) => (
                                 <TiStarOutline key={i} size={30} className="text-black" />
                             ))}
@@ -86,7 +87,7 @@ export default function RatingQuestionComponent({ justCreated, questions, setQue
             <div className="flex flex-col hover:bg-neutral-200 bg-neutral-100 rounded-lg p-3 sm:p-6 gap-3 hover:cursor-pointer flex-grow">
                 <p className="text-lg font-bold">{index + 1}. {questions[index].data.questionText}</p>
                 <div className="flex flex-col gap-3">
-                    <div className="flex gap-1 pl-4">
+                    <div className="flex gap-1 pl-4 flex-wrap">
                         {Array.from({ length: questions[index].data.ratingsLevel }, (_, i) => (
                             <TiStarOutline key={i} size={30} className="text-black" />
                         ))}

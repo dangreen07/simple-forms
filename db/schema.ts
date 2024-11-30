@@ -33,4 +33,4 @@ export const ratingQuestionTable = pgTable("rating_questions", {
     ratingLevels: integer('levels').default(5).notNull(),
     orderIndex: integer('order_index').default(-1).notNull(),
     form_id: serial('form_id').references(() => formsTable.id, { onDelete: 'cascade' }).notNull()
-})
+});
