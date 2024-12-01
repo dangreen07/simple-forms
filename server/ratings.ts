@@ -49,7 +49,8 @@ export async function CreateNewRatingQuestion(formID: number, question: string, 
         id: response[0].rating_question_id,
         questionText: response[0].question ?? "",
         ratingsLevel: response[0].ratingLevels,
-        order_index: response[0].orderIndex
+        order_index: response[0].orderIndex,
+        required: response[0].required
     }
 }
 
@@ -140,6 +141,7 @@ export async function GetRatingQuestionsData(id: number, user_id: string) {
         rating_question: ratingQuestionTable.question,
         rating_level: ratingQuestionTable.ratingLevels,
         order_index: ratingQuestionTable.orderIndex,
+        rating_question_required: ratingQuestionTable.required,
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -157,6 +159,7 @@ function RatingDataProcess(formData: {
     rating_question: string | null;
     rating_level: number | null;
     order_index: number | null;
+    rating_question_required: boolean | null;
 }[]) {
     const ratings: question[] = formData.filter((current) => current.rating_question_id != null).map((element) => {
         return {
@@ -165,7 +168,8 @@ function RatingDataProcess(formData: {
                 id: element.rating_question_id ?? -1,
                 questionText: element.rating_question ?? "",
                 ratingsLevel: element.rating_level ?? -1,
-                order_index: element.order_index ?? -1
+                order_index: element.order_index ?? -1,
+                required: element.rating_question_required ?? false
             }
         }
     })

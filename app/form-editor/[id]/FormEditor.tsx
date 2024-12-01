@@ -16,6 +16,10 @@ import { DragDropContext, Draggable, DraggableProvided, Droppable, DropResult } 
 import RatingQuestionComponent from "./RatingQuestionComponent";
 import { CreateNewRatingQuestion, UpdateRatingQuestionOrderIndex } from "@/server/ratings";
 import TextareaAutosize from 'react-textarea-autosize';
+import DateQuestionComponent from "./DateQuestionComponent";
+import { CreateNewDateQuestion, UpdateDateQuestionOrderIndex } from "@/server/dates";
+import RankingQuestionComponent from "./RankingQuestionComponent";
+import { CreateNewRankingQuestion, UpdateRankingQuestionOrderIndex } from "@/server/rankingQuestions";
 
 export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: number }) {
     const [formName, setFormName] = useState(initialFormName);
@@ -59,6 +63,14 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                 else if (copy2[i].type == "Rating") {
                     copy2[i].data.order_index = i;
                     UpdateRatingQuestionOrderIndex(copy2[i].data.id, i);
+                }
+                else if (copy2[i].type == "Date") {
+                    copy2[i].data.order_index = i;
+                    UpdateDateQuestionOrderIndex(copy2[i].data.id, i);
+                }
+                else if (copy2[i].type == "Ranking") {
+                    copy2[i].data.order_index = i;
+                    UpdateRankingQuestionOrderIndex(copy2[i].data.id, i);
                 }
             }
         }
@@ -120,6 +132,42 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                 />
             );
         }
+        else if (current.type == "Date") {
+            if (questions[index].data.order_index != index) {
+                const copy = [...questions];
+                copy[index].data.order_index = index;
+                setQuestions(copy);
+                UpdateDateQuestionOrderIndex(current.data.id, index);
+            }
+            return (
+                <DateQuestionComponent
+                    key={index}
+                    questions={questions}
+                    setQuestions={setQuestions}
+                    index={index}
+                    justCreated={index == justCreatedIndex}
+                    provided={provided}
+                />
+            );
+        }
+        else if (current.type == "Ranking") {
+            if (questions[index].data.order_index != index) {
+                const copy = [...questions];
+                copy[index].data.order_index = index;
+                setQuestions(copy);
+                UpdateRankingQuestionOrderIndex(current.data.id, index);
+            }
+            return (
+                <RankingQuestionComponent
+                    key={index}
+                    questions={questions}
+                    setQuestions={setQuestions}
+                    index={index}
+                    justCreated={index == justCreatedIndex}
+                    provided={provided}
+                />
+            );
+        }
     }
 
     return (
@@ -135,6 +183,7 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                             <Droppable droppableId="droppable">
                                 {(provided) => (
                                     <div
+                                        className="flex flex-col gap-4"
                                         {...provided.droppableProps}
                                         ref={provided.innerRef}
                                     >
@@ -169,10 +218,10 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     });
                                 }
                             }}>
-                                <span className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-primary-content">
+                                <span className="h-6 w-6 rounded-full bg-blue-700 flex items-center justify-center text-primary-content">
                                     <FiPlus size={28} />
                                 </span>
-                                <span className="text-primary font-bold">Add new question</span>
+                                <span className="text-blue-700 font-bold">Add new question</span>
                             </button>
                             <div id="add-new-question-content" className="px-3 duration-200 hidden gap-4 grid-cols-3">
                                 <button className="btn btn-accent rounded-full" onClick={async () => {
@@ -191,11 +240,12 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     const current: question = {
                                         type: "Choice",
                                         data: {
-                                            id: response.choicesID,
+                                            id: response.id,
                                             questionText: "Question",
                                             options: response.options,
                                             editMode: true,
-                                            order_index: response.orderIndex
+                                            order_index: response.order_index,
+                                            required: response.required
                                         }
                                     };
                                     copy.push(current);
@@ -264,13 +314,57 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                                     </span>
                                     <span className="font-semibold text-lg hidden sm:block">Rating</span>
                                 </button>
-                                <button className="btn btn-accent rounded-full ">
+                                <button className="btn btn-accent rounded-full" onClick={async () => {
+                                    const content = document.getElementById("add-new-question-content") as HTMLDivElement;
+                                    if (content.style.display === "grid") {
+                                        content.style.display = "none";
+                                    } else {
+                                        content.style.display = "grid";
+                                    }
+                                    const copy = [...questions];
+                                    setWaitingForNewQuestionResponse(true);
+                                    const response = await CreateNewDateQuestion(formID, "Question", questions.length);
+                                    if (response == null) {
+                                        // Give error to the user
+                                        return;
+                                    }
+                                    const current: question = {
+                                        type: "Date",
+                                        data: response
+                                    };
+                                    copy.push(current);
+                                    setQuestions(copy);
+                                    setJustCreatedIndex(copy.length - 1);
+                                    setWaitingForNewQuestionResponse(false);
+                                }}>
                                     <span className="flex items-center justify-center">
                                         <FaRegCalendarDays size={24} />
                                     </span>
                                     <span className="font-semibold text-lg hidden sm:block">Date</span>
                                 </button>
-                                <button className="btn btn-accent rounded-full ">
+                                <button className="btn btn-accent rounded-full" onClick={async () => {
+                                    const content = document.getElementById("add-new-question-content") as HTMLDivElement;
+                                    if (content.style.display === "grid") {
+                                        content.style.display = "none";
+                                    } else {
+                                        content.style.display = "grid";
+                                    }
+                                    const copy = [...questions];
+                                    setWaitingForNewQuestionResponse(true);
+                                    const response = await CreateNewRankingQuestion(formID, "Question", ["Option 1", "Option 2", "Option 3"], questions.length);
+                                    if (response == null) {
+                                        // Give error to the user
+                                        return;
+                                    }
+                                    const current: question = {
+                                        type: "Ranking",
+                                        data: response
+                                    };
+                                    copy.push(current);
+                                    setQuestions(copy);
+                                    setJustCreatedIndex(copy.length - 1);
+                                    setWaitingForNewQuestionResponse(false);
+                                }}>
                                     <span className="flex items-center justify-center">
                                         <LuArrowDownUp size={24} />
                                     </span>
@@ -282,5 +376,5 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                 </div>
             </div>
         </div>
-    )
+    );
 }

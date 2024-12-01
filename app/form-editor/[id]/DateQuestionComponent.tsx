@@ -1,26 +1,24 @@
-"use client";
-
-import { question } from "@/server/types";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
-import { RiDeleteBin5Fill } from "react-icons/ri";
-import TextareaAutosize from 'react-textarea-autosize';
-import { DeleteTextQuestion, UpdateTextQuestion } from "@/server/textQuestions";
-import { useClickOutside } from "./ChoiceQuestionComponent";
-import { DraggableProvided } from "@hello-pangea/dnd";
 import { RxDragHandleDots2 } from "react-icons/rx";
+import { useClickOutside } from "./ChoiceQuestionComponent";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { question } from "@/server/types";
+import { DeleteDateQuestion, UpdateDateQuestion } from "@/server/dates";
+import TextareaAutosize from 'react-textarea-autosize';
+import { RiDeleteBin5Fill } from "react-icons/ri";
+import { DraggableProvided } from "@hello-pangea/dnd";
 
-export default function TextQuestionCreation({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
+export default function DateQuestionComponent({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
     const [editMode, setEditMode] = useState(justCreated);
     const [deleted, setDeleted] = useState(false);
     const ref = useRef<HTMLDivElement | null>(null);
 
     async function deleteCallback() {
-        if (questions[index].type == 'Text') {
+        if (questions[index].type == 'Date') {
             const copy = [...questions];
             copy.splice(index, 1);
             // Disable input until the deletion in the database is confirmed
             setDeleted(true);
-            await DeleteTextQuestion(questions[index].data.id);
+            await DeleteDateQuestion(questions[index].data.id);
             setQuestions(copy);
             setDeleted(false);
         }
@@ -29,8 +27,8 @@ export default function TextQuestionCreation({ justCreated, questions, setQuesti
     function editModeSetFalse() {
         if (editMode != false && !deleted) {
             setEditMode(false);
-            if (questions[index].type == 'Text') {
-                UpdateTextQuestion(questions[index].data.id, questions[index].data.questionText, questions[index].data.order_index);
+            if (questions[index].type == 'Date') {
+                UpdateDateQuestion(questions[index].data.id, questions[index].data.questionText, questions[index].data.order_index);
             }
         }
     }
@@ -47,24 +45,24 @@ export default function TextQuestionCreation({ justCreated, questions, setQuesti
                 <div className="flex gap-2">
                     <p className="text-xl font-bold py-1">{index + 1}.</p>
                     <div className="flex flex-col gap-3 flex-grow">
-                        <TextareaAutosize disabled={deleted} className="w-full resize-none outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black w-fill" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
+                        <TextareaAutosize disabled={deleted} className="w-full resize-none outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black" placeholder="Enter your question here..." value={questions[index].data.questionText} onChange={(current) => {
                             const copy = [...questions];
                             copy[index].data.questionText = current.target.value;
                             setQuestions(copy);
                         }} />
-                        <TextareaAutosize disabled={true} placeholder="Answer will go here" className="resize-none outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black placeholder-black hover:cursor-not-allowed"  />
+                        <TextareaAutosize disabled={true} placeholder="Date will be entered here" className="resize-none outline-none border-none bg-neutral-100 p-2 rounded-md disabled:opacity-50 disabled:text-black placeholder-black hover:cursor-not-allowed"  />
                     </div>
                 </div>
             </div>
             :
             <div className="flex flex-col hover:bg-neutral-200 bg-neutral-100 rounded-lg p-3 sm:p-6 gap-3 hover:cursor-pointer flex-grow">
                 <p className="text-lg font-bold">{index + 1}. {questions[index].data.questionText}</p>
-                <div className="flex flex-col gap-3 pl-3">
-                    <div className="w-full resize-none outline-none border-none bg-neutral-300 p-2 rounded-md disabled:opacity-100 disabled:text-black placeholder-black cursor-pointer">
-                        <p>Enter your answer</p>
+                <div className="flex flex-col gap-3 pl-4">
+                    <div className="outline-none border-none bg-neutral-300 p-2 rounded-md disabled:opacity-50 disabled:text-black">
+                        <p className="text-md text-black">Please input the date (yyyy-mm-dd) here</p>
                     </div>
                 </div>
-            </div>}
+            </div> }
             <div {...provided.dragHandleProps}><RxDragHandleDots2 size={24} className="text-black" /></div>
         </div>
     )

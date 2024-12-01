@@ -24,8 +24,8 @@ export default async function NavigationAnyAccess({ checkSession = true, backgro
             <li><Link href={""} className={`${textColor} font-medium text-lg md:text-xl`}>About Us</Link></li>
             <li><Link href={""} className={`${textColor} font-medium text-lg md:text-xl`}>Pricing</Link></li>
             {user && <li><Link href={"/dashboard"} className={`${textColor} font-medium text-lg md:text-xl`}>Dashboard</Link></li>}
-            {!user && <li><Link href={"/api/auth/login"} className='bg-primary p-3 text-primary-content font-bold rounded-xl'>JOIN NOW</Link></li>}
-            {user && <li><Link href={"/api/auth/logout"} className='bg-primary p-3 text-primary-content font-bold rounded-xl'>Log out</Link></li>}
+            {!user && <li><Link href={"/api/auth/login"} className='bg-blue-700 p-3 text-white font-bold rounded-xl'>JOIN NOW</Link></li>}
+            {user && <li><Link href={"/api/auth/logout"} className='bg-blue-700 p-3 text-white font-bold rounded-xl'>Log out</Link></li>}
           </ul>
         </div>
       </div>
@@ -33,8 +33,8 @@ export default async function NavigationAnyAccess({ checkSession = true, backgro
         <Link href={""} className={`${textColor} font-medium text-xl`}>About Us</Link>
         <Link href={""} className={`${textColor} font-medium text-xl`}>Pricing</Link>
         {user && <Link href={"/dashboard"} className={`${textColor} font-medium text-xl`}>Dashboard</Link>}
-        {!user && <Link href={"/api/auth/login"} className='bg-primary p-1 lg:p-3 text-primary-content font-bold rounded-xl text-center'>JOIN NOW</Link>}
-        {user && <Link href={"/api/auth/logout"} className='bg-primary p-1 lg:p-3 text-primary-content font-bold rounded-xl text-center'>Log out</Link>}
+        {!user && <Link href={"/api/auth/login"} className='bg-blue-700 p-1 lg:p-3 text-white font-bold rounded-xl text-center'>JOIN NOW</Link>}
+        {user && <Link href={"/api/auth/logout"} className='bg-blue-700 p-1 lg:p-3 text-white font-bold rounded-xl text-center'>Log out</Link>}
       </div>
     </div>
   );

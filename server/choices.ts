@@ -24,7 +24,7 @@ const db = drizzle(DATABASE_URL);
  * @param order_index - Order index for the question.
  * @returns A promise that resolves to the newly created choice question data or null if credentials are invalid.
  */
-export async function CreateNewChoicesQuestion(formID: number, questionText: string, options: string[], order_index: number): Promise<{ choicesID: number, options: OptionsData[], orderIndex: number } | null> {
+export async function CreateNewChoicesQuestion(formID: number, questionText: string, options: string[], order_index: number): Promise<ChoiceData | null> {
     if (!(await CredentialsValid(formID))) {
         return null;
     }
@@ -49,7 +49,7 @@ export async function CreateNewChoicesQuestion(formID: number, questionText: str
         return null;
     }
     return {
-        choicesID: response[0].choices_id,
+        id: response[0].choices_id,
         options: optionsResponse.map((current) => {
             return {
                 id: current.option_id,
@@ -57,7 +57,10 @@ export async function CreateNewChoicesQuestion(formID: number, questionText: str
                 order_index: current.orderIndex
             }
         }),
-        orderIndex: response[0].choicesOrderIndex
+        questionText: response[0].question ?? "",
+        editMode: true,
+        order_index: response[0].choicesOrderIndex,
+        required: response[0].required
     }
 }
 
@@ -213,6 +216,7 @@ export async function GetChoicesData(id: number, user_id: string) {
         choices_id: choicesTable.choices_id,
         choices_question: choicesTable.question,
         choices_order_index: choicesTable.choicesOrderIndex,
+        choices_question_required: choicesTable.required,
         option_id: choicesOptionsTable.option_id,
         option: choicesOptionsTable.option,
         option_order_index: choicesOptionsTable.orderIndex,
@@ -242,6 +246,7 @@ function ChoicesDataProcess(formData: {
     choices_id: number | null;
     choices_question: string | null;
     choices_order_index: number | null;
+    choices_question_required: boolean | null;
     option_id: number | null;
     option: string | null;
     option_order_index: number | null;
@@ -268,6 +273,7 @@ function ChoicesDataProcess(formData: {
                 options: optionsList,
                 editMode: false,
                 order_index: element.choices_order_index ?? -1,
+                required: element.choices_question_required ?? false,
             };
         }
         else {
@@ -285,6 +291,7 @@ function ChoicesDataProcess(formData: {
                     options: optionsList,
                     editMode: false,
                     order_index: element.choices_order_index ?? -1,
+                    required: element.choices_question_required ?? false,
                 });
             }
         }

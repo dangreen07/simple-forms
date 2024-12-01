@@ -7,14 +7,21 @@ export type question = {
 } | {
     type: 'Rating',
     data: RatingData
-};
+} | {
+    type: 'Date',
+    data: DateData
+} | {
+    type: 'Ranking',
+    data: RankingData
+}
 
 export type ChoiceData = {
     id: number,
     questionText: string,
     options: OptionsData[],
     editMode: boolean,
-    order_index: number
+    order_index: number,
+    required: boolean
 };
 
 export type OptionsData = {
@@ -26,19 +33,35 @@ export type OptionsData = {
 export type TextData = {
     id: number,
     questionText: string,
-    order_index: number
+    order_index: number,
+    required: boolean
 }
 
 export type RatingData = {
     id: number,
     questionText: string,
     ratingsLevel: number,
-    order_index: number
+    order_index: number,
+    required: boolean
 }
 
 export type DateData = {
     id: number,
     questionText: string,
-    date: string,
+    order_index: number,
+    required: boolean
+}
+
+export type RankingData = {
+    id: number,
+    questionText: string,
+    rankOptions: RankOptionData[],
+    order_index: number,
+    required: boolean
+}
+
+export type RankOptionData = {
+    id: number,
+    option: string,
     order_index: number
 }

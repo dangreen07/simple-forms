@@ -7,6 +7,8 @@ import { eq, and } from 'drizzle-orm';
 import { GetTextQuestionsData } from "./textQuestions";
 import { GetChoicesData } from "./choices";
 import { GetRatingQuestionsData } from "./ratings";
+import { GetDateQuestionsData } from "./dates";
+import { GetRankingQuestionsData } from "./rankingQuestions";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 if (DATABASE_URL == "") {
@@ -62,6 +64,10 @@ export async function GetFormData(id: number) {
     output.push(...textQuestionsOutput);
     const ratingQuestionsOutput = await GetRatingQuestionsData(id, user_id);
     output.push(...ratingQuestionsOutput);
+    const dateQuestionsOutput = await GetDateQuestionsData(id, user_id);
+    output.push(...dateQuestionsOutput);
+    const rankingQuestionsOutput = await GetRankingQuestionsData(id, user_id);
+    output.push(...rankingQuestionsOutput);
     return {
         formName: formName,
         questions: output
