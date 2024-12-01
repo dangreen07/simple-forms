@@ -8,7 +8,7 @@ import { MdOutlineRadioButtonChecked } from "react-icons/md";
 import { PiTextTBold } from "react-icons/pi";
 import { question } from "@/server/types";
 import { CreateNewChoicesQuestion, UpdateChoiceOrderIndex } from "@/server/choices";
-import { UpdateFormTitle } from "@/server/forms";
+import { DeleteForm, UpdateFormTitle } from "@/server/forms";
 import TextQuestionCreation from "./TextQuestionCreation";
 import { CreateNewTextQuestion, UpdateTextQuestionOrderIndex } from "@/server/textQuestions";
 import ChoiceQuestionComponent, { useClickOutside } from "./ChoiceQuestionComponent";
@@ -20,6 +20,9 @@ import DateQuestionComponent from "./DateQuestionComponent";
 import { CreateNewDateQuestion, UpdateDateQuestionOrderIndex } from "@/server/dates";
 import RankingQuestionComponent from "./RankingQuestionComponent";
 import { CreateNewRankingQuestion, UpdateRankingQuestionOrderIndex } from "@/server/rankingQuestions";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: number }) {
     const [formName, setFormName] = useState(initialFormName);
@@ -28,6 +31,8 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
     const titleRef = useRef<HTMLTextAreaElement | null>(null);
     const [editingTitle, setEditingTitle] = useState(false);
     const [waitingForNewQuestionResponse, setWaitingForNewQuestionResponse] = useState(false);
+
+    const router = useRouter();
 
     async function saveTitleToDatabase() {
         if (editingTitle) {
@@ -170,10 +175,50 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
         }
     }
 
+    async function handleDeleteForm() {
+        const confirmation = window.confirm("Are you sure you want to delete this form?");
+        if (confirmation) {
+            try {
+                await DeleteForm(formID);
+                router.prefetch("/dashboard");
+                router.push('/dashboard');
+            } catch (error) {
+                console.error("Failed to delete the form", error);
+                alert("Failed to delete the form.");
+            }
+        }
+    }
+
     return (
         <div className="flex flex-col flex-grow">
-            <div className="flex h-full flex-grow justify-center">
-                <div className="bg-neutral-100 max-w-6xl flex-grow my-6 rounded-lg">
+            <div className="flex justify-center">
+                <div className="flex h-full justify-end my-2 max-w-6xl flex-grow px-4 gap-3">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline">Settings</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Settings</DialogTitle>
+                                <DialogDescription>
+                                    Make changes to the form settings here. Click save when you&apos;re done.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex flex-col items-center">
+                                <Button variant="destructive" onClick={handleDeleteForm}>Delete Form</Button>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="submit">Save changes</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                    <Button variant="outline">Preview</Button>
+                </div>
+            </div>
+            <div className="flex justify-center">
+                <div className="bg-neutral-100 max-w-6xl flex-grow mb-6 rounded-lg">
                     <div id="form-content" className="w-full flex flex-col text-black px-2 md:px-12 py-16 gap-4">
                         <TextareaAutosize ref={titleRef} value={formName} onChange={(current) => {
                             setEditingTitle(true);

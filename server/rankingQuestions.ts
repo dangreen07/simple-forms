@@ -14,6 +14,15 @@ if (DATABASE_URL == "") {
 
 const db = drizzle(DATABASE_URL);
 
+/**
+ * Creates a new ranking question for a specified form.
+ *
+ * @param formID - The ID of the form to which the ranking question will be added.
+ * @param question - The text of the ranking question.
+ * @param rankingOptions - An array of options for the ranking question.
+ * @param orderIndex - The order index at which the question should appear.
+ * @returns A promise that resolves to the created RankingData object or null if creation fails.
+ */
 export async function CreateNewRankingQuestion(formID: number, question: string, rankingOptions: string[], orderIndex: number): Promise<null | RankingData> {
     if (!(await CredentialsValid(formID))) {
         return null;
@@ -24,7 +33,6 @@ export async function CreateNewRankingQuestion(formID: number, question: string,
         orderIndex: orderIndex
     }).returning();
     if (response.length == 0) {
-        // Failed to insert ranking question
         console.error("Failed to insert ranking question!");
         return null;
     }
@@ -38,7 +46,6 @@ export async function CreateNewRankingQuestion(formID: number, question: string,
             orderIndex: i
         }).returning();
         if (response2.length == 0) {
-            // Failed to insert ranking option
             console.error("Failed to insert ranking option!");
             return null;
         }
@@ -57,11 +64,15 @@ export async function CreateNewRankingQuestion(formID: number, question: string,
     }
 }
 
-export async function DeleteRankingQuestion(questionID: number) {
-    // Credentials checking
+/**
+ * Deletes a ranking question by its ID after verifying user credentials.
+ *
+ * @param questionID - The ID of the ranking question to delete.
+ * @returns A promise that resolves to true if the question is deleted, otherwise false.
+ */
+export async function DeleteRankingQuestion(questionID: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -78,11 +89,18 @@ export async function DeleteRankingQuestion(questionID: number) {
     return true;
 }
 
-export async function UpdateRankingQuestion(questionID: number, questionText: string, rankingOptions: RankOptionData[], order_index: number) {
-    // Credentials checking
+/**
+ * Updates a ranking question's text, options, and order index after verifying user credentials.
+ *
+ * @param questionID - The ID of the question to update.
+ * @param questionText - The new text for the ranking question.
+ * @param rankingOptions - An array of RankOptionData objects for the updated options.
+ * @param order_index - The new order index for the ranking question.
+ * @returns A promise that resolves to true if the update is successful, otherwise false.
+ */
+export async function UpdateRankingQuestion(questionID: number, questionText: string, rankingOptions: RankOptionData[], order_index: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -108,11 +126,16 @@ export async function UpdateRankingQuestion(questionID: number, questionText: st
     return optionsResponses.every((current) => current.rowCount != 0);
 }
 
-export async function UpdateRankingQuestionOrderIndex(questionID: number, order_index: number) {
-    // Credentials checking
+/**
+ * Updates the order index of a ranking question after verifying user credentials.
+ *
+ * @param questionID - The ID of the ranking question to update.
+ * @param order_index - The new order index for the question.
+ * @returns A promise that resolves to true if the update is successful, otherwise false.
+ */
+export async function UpdateRankingQuestionOrderIndex(questionID: number, order_index: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -131,6 +154,13 @@ export async function UpdateRankingQuestionOrderIndex(questionID: number, order_
     return true;
 }
 
+/**
+ * Retrieves all ranking questions for a given form ID if the form belongs to the specified user.
+ *
+ * @param id - The ID of the form to retrieve questions for.
+ * @param user_id - The ID of the user owning the form.
+ * @returns A promise resolving to an array of questions if found, otherwise an empty array.
+ */
 export async function GetRankingQuestionsData(id: number, user_id: string): Promise<question[]> {
     const formData = await db.select({
         ranking_question_id: rankingQuestionTable.ranking_question_id,
@@ -151,7 +181,13 @@ export async function GetRankingQuestionsData(id: number, user_id: string): Prom
     return output;
 }
 
-function RankingDataProcess(formData: { ranking_question_id: number | null; ranking_question: string | null; ranking_order_index: number | null; ranking_option_id: number | null; ranking_option: string | null; ranking_option_order_index: number | null; ranking_question_required: boolean | null; }[]) {
+/**
+ * Processes raw form data into a structured array of ranking questions.
+ *
+ * @param formData - The raw form data array.
+ * @returns An array of formatted question objects.
+ */
+function RankingDataProcess(formData: { ranking_question_id: number | null; ranking_question: string | null; ranking_order_index: number | null; ranking_option_id: number | null; ranking_option: string | null; ranking_option_order_index: number | null; ranking_question_required: boolean | null; }[]): question[] {
     const rankingQuestions: RankingData[] = [];
     formData.forEach(element => {
         let optionsList: RankOptionData[] = [];
@@ -175,8 +211,7 @@ function RankingDataProcess(formData: { ranking_question_id: number | null; rank
                 order_index: element.ranking_order_index ?? -1,
                 required: element.ranking_question_required ?? false,
             };
-        }
-        else {
+        } else {
             if (element.ranking_option != null) {
                 optionsList.push({
                     id: element.ranking_option_id ?? -1,
@@ -204,6 +239,14 @@ function RankingDataProcess(formData: { ranking_question_id: number | null; rank
     return output;
 }
 
+/**
+ * Creates a new ranking option for a specified ranking question.
+ *
+ * @param questionID - The ID of the ranking question to which the option will be added.
+ * @param option - The text of the ranking option.
+ * @param order_index - The order index of the new option.
+ * @returns A promise that resolves to the created RankOptionData object or null if creation fails.
+ */
 export async function CreateNewRankingOption(questionID: number, option: string, order_index: number): Promise<RankOptionData | null> {
     const session = await getSession();
     if (session == null) {
@@ -232,6 +275,12 @@ export async function CreateNewRankingOption(questionID: number, option: string,
     }
 }
 
+/**
+ * Deletes a ranking option by its ID after verifying user credentials.
+ *
+ * @param option_id - The ID of the ranking option to delete.
+ * @returns A promise that resolves to true if the option is deleted, otherwise false.
+ */
 export async function DeleteRankingOption(option_id: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {

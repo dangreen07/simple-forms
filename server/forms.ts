@@ -144,3 +144,26 @@ export async function UpdateFormTitle(formID: number, formTitle: string) {
     }
     return false;
 }
+
+/**
+ * Deletes a form from the database if it belongs to the current user.
+ *
+ * @param formID - The unique identifier of the form to be deleted.
+ * @returns A promise that resolves to `true` if the form was successfully deleted,
+ *          `false` if no form was deleted, or an empty array if the user session is not defined.
+ */
+export async function DeleteForm(formID: number): Promise<boolean | []> {
+    const session = await getSession();
+    if (session == null) {
+        // User not defined
+        return [];
+    }
+    const user = session.user;
+    const user_id = user.sub;
+
+    const response = await db.delete(formsTable).where(and(eq(formsTable.user_id, user_id), eq(formsTable.id, formID)));
+    if (response.rowCount == 1) {
+        return true;
+    }
+    return false;
+}

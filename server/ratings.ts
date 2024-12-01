@@ -40,7 +40,6 @@ export async function CreateNewRatingQuestion(formID: number, question: string, 
     }).returning();
 
     if (response.length == 0) {
-        // Failed to insert rating question
         console.error("Failed to insert rating question!");
         return null;
     }
@@ -66,11 +65,9 @@ export async function CreateNewRatingQuestion(formID: number, question: string, 
  * @returns {Promise<boolean>} - A promise that resolves to true if the 
  * question was successfully deleted, or false otherwise.
  */
-export async function DeleteRatingQuestion(questionID: number) {
-    // Credentials checking
+export async function DeleteRatingQuestion(questionID: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -87,11 +84,18 @@ export async function DeleteRatingQuestion(questionID: number) {
     return true;
 }
 
-export async function UpdateRatingQuestion(questionID: number, questionText: string, ratingsLevel: number, order_index: number) {
-    // Credentials checking
+/**
+ * Updates a rating question in the database if the user is authorized.
+ *
+ * @param {number} questionID - The ID of the question to update.
+ * @param {string} questionText - The new text for the rating question.
+ * @param {number} ratingsLevel - The new rating level for the question.
+ * @param {number} order_index - The new order index for the rating question.
+ * @returns {Promise<boolean>} - A promise that resolves to true if the update is successful, false otherwise.
+ */
+export async function UpdateRatingQuestion(questionID: number, questionText: string, ratingsLevel: number, order_index: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -112,11 +116,16 @@ export async function UpdateRatingQuestion(questionID: number, questionText: str
     return true;
 }
 
-export async function UpdateRatingQuestionOrderIndex(questionID: number, order_index: number) {
-    // Credentials checking
+/**
+ * Updates the order index of a rating question if the user is authorized.
+ *
+ * @param {number} questionID - The ID of the question to update.
+ * @param {number} order_index - The new order index for the question.
+ * @returns {Promise<boolean>} - A promise that resolves to true if the update is successful, false otherwise.
+ */
+export async function UpdateRatingQuestionOrderIndex(questionID: number, order_index: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -135,7 +144,14 @@ export async function UpdateRatingQuestionOrderIndex(questionID: number, order_i
     return true;
 }
 
-export async function GetRatingQuestionsData(id: number, user_id: string) {
+/**
+ * Retrieves rating question data for a specific form and user.
+ *
+ * @param {number} id - The ID of the form.
+ * @param {string} user_id - The ID of the user.
+ * @returns {Promise<question[]>} - A promise that resolves to an array of questions if found, otherwise an empty array.
+ */
+export async function GetRatingQuestionsData(id: number, user_id: string): Promise<question[]> {
     const formData = await db.select({
         rating_question_id: ratingQuestionTable.rating_question_id,
         rating_question: ratingQuestionTable.question,
@@ -154,13 +170,19 @@ export async function GetRatingQuestionsData(id: number, user_id: string) {
     return output;
 }
 
+/**
+ * Processes raw form data into a structured array of rating questions.
+ *
+ * @param {Array} formData - The raw form data array.
+ * @returns {question[]} - An array of formatted question objects.
+ */
 function RatingDataProcess(formData: {
     rating_question_id: number | null;
     rating_question: string | null;
     rating_level: number | null;
     order_index: number | null;
     rating_question_required: boolean | null;
-}[]) {
+}[]): question[] {
     const ratings: question[] = formData.filter((current) => current.rating_question_id != null).map((element) => {
         return {
             type: "Rating",

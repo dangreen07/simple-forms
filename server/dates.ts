@@ -14,6 +14,14 @@ if (DATABASE_URL == "") {
 
 const db = drizzle(DATABASE_URL);
 
+/**
+ * Creates a new date question for a specified form.
+ *
+ * @param formID - The ID of the form to which the date question will be added.
+ * @param question - The text of the date question.
+ * @param orderIndex - The order index at which the question should appear.
+ * @returns A promise that resolves to the created DateData object or null if creation fails.
+ */
 export async function CreateNewDateQuestion(formID: number, question: string, orderIndex: number): Promise<null | DateData> {
     if (!(await CredentialsValid(formID))) {
         return null;
@@ -25,7 +33,6 @@ export async function CreateNewDateQuestion(formID: number, question: string, or
     }).returning();
 
     if (response.length == 0) {
-        // Failed to insert date question
         console.error("Failed to insert date question!");
         return null;
     }
@@ -38,11 +45,15 @@ export async function CreateNewDateQuestion(formID: number, question: string, or
     }
 }
 
-export async function DeleteDateQuestion(questionID: number) {
-    // Credentials checking
+/**
+ * Deletes a date question by its ID after verifying user credentials.
+ *
+ * @param questionID - The ID of the date question to delete.
+ * @returns A promise that resolves to true if the question is deleted, otherwise false.
+ */
+export async function DeleteDateQuestion(questionID: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -59,11 +70,17 @@ export async function DeleteDateQuestion(questionID: number) {
     return true;
 }
 
-export async function UpdateDateQuestion(questionID: number, questionText: string, order_index: number) {
-    // Credentials checking
+/**
+ * Updates a date question's text and order index after verifying user credentials.
+ *
+ * @param questionID - The ID of the question to update.
+ * @param questionText - The new text for the date question.
+ * @param order_index - The new order index for the date question.
+ * @returns A promise that resolves to true if the update is successful, otherwise false.
+ */
+export async function UpdateDateQuestion(questionID: number, questionText: string, order_index: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -83,11 +100,16 @@ export async function UpdateDateQuestion(questionID: number, questionText: strin
     return true;
 }
 
-export async function UpdateDateQuestionOrderIndex(questionID: number, order_index: number) {
-    // Credentials checking
+/**
+ * Updates the order index of a date question after verifying user credentials.
+ *
+ * @param questionID - The ID of the date question to update.
+ * @param order_index - The new order index for the question.
+ * @returns A promise that resolves to true if the update is successful, otherwise false.
+ */
+export async function UpdateDateQuestionOrderIndex(questionID: number, order_index: number): Promise<boolean> {
     const session = await getSession();
     if (session == null) {
-        // User not defined
         return false;
     }
     const user = session.user;
@@ -106,7 +128,14 @@ export async function UpdateDateQuestionOrderIndex(questionID: number, order_ind
     return true;
 }
 
-export async function GetDateQuestionsData(id: number, user_id: string) {
+/**
+ * Retrieves all date questions for a given form ID if the form belongs to the specified user.
+ *
+ * @param id - The ID of the form to retrieve questions for.
+ * @param user_id - The ID of the user owning the form.
+ * @returns A promise resolving to an array of questions if found, otherwise an empty array.
+ */
+export async function GetDateQuestionsData(id: number, user_id: string): Promise<question[]> {
     const formData = await db.select({
         date_question_id: dateQuestionTable.date_question_id,
         question: dateQuestionTable.question,
@@ -124,6 +153,12 @@ export async function GetDateQuestionsData(id: number, user_id: string) {
     return output;
 }
 
+/**
+ * Processes raw form data into a structured array of date questions.
+ *
+ * @param formData - The raw form data array.
+ * @returns An array of formatted question objects.
+ */
 function DateDataProcess(formData: {
     date_question_id: number | null;
     question: string | null;
