@@ -1,9 +1,10 @@
 "use client";
 
+import { useClickOutside } from "@/functions/useClickOutside";
 import { CreateNewChoiceOption, DeleteChoice, DeleteChoiceOption, UpdateChoiceQuestion } from "@/server/choices";
 import { question } from "@/server/types";
 import { DraggableProvided } from "@hello-pangea/dnd";
-import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { MdOutlineRadioButtonChecked, MdOutlineRadioButtonUnchecked } from "react-icons/md";
 import { RiDeleteBin5Fill } from "react-icons/ri";
@@ -121,23 +122,4 @@ export default function ChoiceQuestionComponent({ questions, setQuestions, index
             <div {...provided.dragHandleProps}><RxDragHandleDots2 size={24} className="text-black" /></div>
         </div>
     );
-}
-
-export const useClickOutside = (
-  ref: RefObject<HTMLElement | undefined>,
-  callback: () => void
-) => {
-  const handleClick = (event: MouseEvent) => {
-    if (ref.current && !ref.current.contains(event.target as HTMLElement)) {
-      callback()
-    }
-  }
-
-  useEffect(() => {
-    document.addEventListener('click', handleClick)
-
-    return () => {
-      document.removeEventListener('click', handleClick)
-    }
-  })
 }

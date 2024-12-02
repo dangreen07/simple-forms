@@ -5,11 +5,11 @@ import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import TextareaAutosize from 'react-textarea-autosize';
 import { DeleteTextQuestion, UpdateTextQuestion } from "@/server/textQuestions";
-import { useClickOutside } from "./ChoiceQuestionComponent";
 import { DraggableProvided } from "@hello-pangea/dnd";
 import { RxDragHandleDots2 } from "react-icons/rx";
+import { useClickOutside } from "@/functions/useClickOutside";
 
-export default function TextQuestionCreation({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
+export default function TextQuestionComponent({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
     const [editMode, setEditMode] = useState(justCreated);
     const [deleted, setDeleted] = useState(false);
     const ref = useRef<HTMLDivElement | null>(null);

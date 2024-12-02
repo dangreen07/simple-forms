@@ -1,15 +1,13 @@
-"use server";
-
 import NavigationAnyAccess from "@/components/NavigationAnyAccess";
 import { GetFormData } from "@/server/forms";
 import { redirect } from "next/navigation";
 import BackButton from "./BackButton";
-import ChoiceQuestionForm from "@/components/form/ChoiceQuestionForm";
-import TextQuestionForm from "@/components/form/TextQuestionForm";
-import RatingQuestionForm from "@/components/form/RatingQuestionForm";
+import ChoiceQuestionForm from "@/components/form-preview/ChoiceQuestionForm";
+import TextQuestionForm from "@/components/form-preview/TextQuestionForm";
+import RatingQuestionForm from "@/components/form-preview/RatingQuestionForm";
 import { question } from "@/server/types";
-import DateQuestionForm from "@/components/form/DateQuestionForm";
-import RankingQuestionForm from "@/components/form/RankingQuestionForm";
+import DateQuestionForm from "@/components/form-preview/DateQuestionForm";
+import RankingQuestionForm from "@/components/form-preview/RankingQuestionForm";
 
 export default async function Page({ params }: {params: { id: string } }) {
     const data = await GetFormData(params.id);
@@ -47,13 +45,13 @@ export default async function Page({ params }: {params: { id: string } }) {
             <div className="flex flex-col flex-grow bg-gradient-to-b from-blue-300 to-green-300 bg-fixed">
                 <div className="flex justify-center">
                     <div className="flex h-full justify-start py-2 max-w-6xl flex-grow px-4 gap-3">
-                        <BackButton />
+                        <BackButton id={params.id} />
                     </div>
                 </div>
                 <div className="flex flex-grow justify-center pb-6">
-                    <div className="flex flex-col max-w-6xl flex-grow bg-neutral-200 rounded-3xl bg-opacity-80 p-3 sm:p-12 gap-3">
+                    <div className="flex flex-col max-w-6xl flex-grow bg-neutral-200 rounded-3xl p-3 sm:p-12 gap-3">
                         <p className="text-3xl sm:text-4xl md:text-5xl font-semibold">{data.formName}</p>
-                        {data.questions.map((current, index) => outputQuestion(current, index))}
+                        {data.questions.sort((a,b) => a.data.order_index - b.data.order_index).map((current, index) => outputQuestion(current, index))}
                     </div>
                 </div>
             </div>

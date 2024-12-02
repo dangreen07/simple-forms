@@ -1,11 +1,11 @@
 import { RxDragHandleDots2 } from "react-icons/rx";
-import { useClickOutside } from "./ChoiceQuestionComponent";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { question } from "@/server/types";
 import { DeleteDateQuestion, UpdateDateQuestion } from "@/server/dates";
 import TextareaAutosize from 'react-textarea-autosize';
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import { DraggableProvided } from "@hello-pangea/dnd";
+import { useClickOutside } from "@/functions/useClickOutside";
 
 export default function DateQuestionComponent({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
     const [editMode, setEditMode] = useState(justCreated);

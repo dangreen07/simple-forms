@@ -15,6 +15,12 @@ export type question = {
     data: RankingData
 }
 
+export type questionResponse = {
+    type: "Choice" | "Text" | 'Rating' | 'Date' | 'Ranking',
+    id: number,
+    response: string
+}
+
 export type ChoiceData = {
     id: number,
     questionText: string,

@@ -4,11 +4,11 @@ import { DeleteRatingQuestion, UpdateRatingQuestion } from "@/server/ratings";
 import { question } from "@/server/types";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { RiDeleteBin5Fill } from "react-icons/ri";
-import { useClickOutside } from "./ChoiceQuestionComponent";
 import { TiStarOutline } from "react-icons/ti";
 import { DraggableProvided } from "@hello-pangea/dnd";
 import { RxDragHandleDots2 } from "react-icons/rx";
 import TextareaAutosize from 'react-textarea-autosize';
+import { useClickOutside } from "@/functions/useClickOutside";
 
 export default function RatingQuestionComponent({ justCreated, questions, setQuestions, index, provided }: { justCreated: boolean, questions: question[], setQuestions: Dispatch<SetStateAction<question[]>>, index: number, provided: DraggableProvided }) {
     const [editMode, setEditMode] = useState(justCreated);
