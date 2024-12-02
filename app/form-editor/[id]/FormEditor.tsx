@@ -24,7 +24,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: number }) {
+export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: string }) {
     const [formName, setFormName] = useState(initialFormName);
     const [questions, setQuestions] = useState<question[]>(initialQuestions);
     const [justCreatedIndex, setJustCreatedIndex] = useState(-1);
@@ -214,7 +214,9 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button variant="outline">Preview</Button>
+                    <Button onClick={() => {
+                        router.push('/form-preview/' + formID);
+                    }} variant="outline">Preview</Button>
                 </div>
             </div>
             <div className="flex justify-center">

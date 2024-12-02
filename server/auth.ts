@@ -12,7 +12,7 @@ if (DATABASE_URL == "") {
 
 const db = drizzle(DATABASE_URL);
 
-export async function CredentialsValid(formID: number) {
+export async function CredentialsValid(formID: string) {
     const session = await getSession();
     if (session == null) {
         // User not defined

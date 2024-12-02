@@ -22,7 +22,7 @@ const db = drizzle(DATABASE_URL);
  * @param orderIndex - The order index at which the question should appear.
  * @returns A promise that resolves to the created DateData object or null if creation fails.
  */
-export async function CreateNewDateQuestion(formID: number, question: string, orderIndex: number): Promise<null | DateData> {
+export async function CreateNewDateQuestion(formID: string, question: string, orderIndex: number): Promise<null | DateData> {
     if (!(await CredentialsValid(formID))) {
         return null;
     }
@@ -135,7 +135,7 @@ export async function UpdateDateQuestionOrderIndex(questionID: number, order_ind
  * @param user_id - The ID of the user owning the form.
  * @returns A promise resolving to an array of questions if found, otherwise an empty array.
  */
-export async function GetDateQuestionsData(id: number, user_id: string): Promise<question[]> {
+export async function GetDateQuestionsData(id: string, user_id: string): Promise<question[]> {
     const formData = await db.select({
         date_question_id: dateQuestionTable.date_question_id,
         question: dateQuestionTable.question,

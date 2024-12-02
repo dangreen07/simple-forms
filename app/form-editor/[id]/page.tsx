@@ -6,7 +6,7 @@ import { question } from "@/server/types";
 export default async function Page({ params }: {params: { id: string } }) {
     let formName = "";
     let questions: question[] = [];
-    const data = await GetFormData(Number(params.id));
+    const data = await GetFormData(params.id);
     if (data == null) {
         // Invalid credentials or the form doesn't exist
     }
@@ -18,9 +18,9 @@ export default async function Page({ params }: {params: { id: string } }) {
     return (
         <div className="flex flex-col min-h-screen bg-blue-300">
             <div className="fixed top-0 w-full"><NavigationAnyAccess checkSession={false} background="bg-blue-300" textColor="text-gray-800" /></div>
-            <div className="pt-24"></div>
+            <div className="pt-24" />
             <div className="flex flex-grow bg-gradient-to-b from-blue-300 to-green-300 bg-fixed">
-            <FormEditor initialFormName={formName} initialQuestions={questions} formID={Number(params.id)} />
+                <FormEditor initialFormName={formName} initialQuestions={questions} formID={params.id} />
             </div>
         </div>
     )

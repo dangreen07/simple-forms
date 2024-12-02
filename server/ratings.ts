@@ -22,13 +22,13 @@ const db = drizzle(DATABASE_URL);
  * default rating level of 5. The function then returns the rating data
  * if the insertion was successful.
  *
- * @param {number} formID - The ID of the form to which the rating question belongs.
+ * @param {string} formID - The ID of the form to which the rating question belongs.
  * @param {string} question - The text of the rating question.
  * @param {number} orderIndex - The order index for the question in the form.
  * @returns {Promise<null | RatingData>} - A promise that resolves to the newly created
  * rating question data if successful, or null if not.
  */
-export async function CreateNewRatingQuestion(formID: number, question: string, orderIndex: number): Promise<null | RatingData> {
+export async function CreateNewRatingQuestion(formID: string, question: string, orderIndex: number): Promise<null | RatingData> {
     if (!(await CredentialsValid(formID))) {
         return null;
     }
@@ -147,11 +147,11 @@ export async function UpdateRatingQuestionOrderIndex(questionID: number, order_i
 /**
  * Retrieves rating question data for a specific form and user.
  *
- * @param {number} id - The ID of the form.
+ * @param {string} id - The ID of the form.
  * @param {string} user_id - The ID of the user.
  * @returns {Promise<question[]>} - A promise that resolves to an array of questions if found, otherwise an empty array.
  */
-export async function GetRatingQuestionsData(id: number, user_id: string): Promise<question[]> {
+export async function GetRatingQuestionsData(id: string, user_id: string): Promise<question[]> {
     const formData = await db.select({
         rating_question_id: ratingQuestionTable.rating_question_id,
         rating_question: ratingQuestionTable.question,

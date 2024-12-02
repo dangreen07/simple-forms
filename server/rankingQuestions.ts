@@ -23,7 +23,7 @@ const db = drizzle(DATABASE_URL);
  * @param orderIndex - The order index at which the question should appear.
  * @returns A promise that resolves to the created RankingData object or null if creation fails.
  */
-export async function CreateNewRankingQuestion(formID: number, question: string, rankingOptions: string[], orderIndex: number): Promise<null | RankingData> {
+export async function CreateNewRankingQuestion(formID: string, question: string, rankingOptions: string[], orderIndex: number): Promise<null | RankingData> {
     if (!(await CredentialsValid(formID))) {
         return null;
     }
@@ -161,7 +161,7 @@ export async function UpdateRankingQuestionOrderIndex(questionID: number, order_
  * @param user_id - The ID of the user owning the form.
  * @returns A promise resolving to an array of questions if found, otherwise an empty array.
  */
-export async function GetRankingQuestionsData(id: number, user_id: string): Promise<question[]> {
+export async function GetRankingQuestionsData(id: string, user_id: string): Promise<question[]> {
     const formData = await db.select({
         ranking_question_id: rankingQuestionTable.ranking_question_id,
         ranking_question: rankingQuestionTable.question,

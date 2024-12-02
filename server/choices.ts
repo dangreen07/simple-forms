@@ -24,7 +24,7 @@ const db = drizzle(DATABASE_URL);
  * @param order_index - Order index for the question.
  * @returns A promise that resolves to the newly created choice question data or null if credentials are invalid.
  */
-export async function CreateNewChoicesQuestion(formID: number, questionText: string, options: string[], order_index: number): Promise<ChoiceData | null> {
+export async function CreateNewChoicesQuestion(formID: string, questionText: string, options: string[], order_index: number): Promise<ChoiceData | null> {
     if (!(await CredentialsValid(formID))) {
         return null;
     }
@@ -210,7 +210,7 @@ export async function UpdateChoiceOrderIndex(choices_id: number, order_index: nu
  * @param user_id - User ID for authentication.
  * @returns An object containing the structured choice data and form name.
  */
-export async function GetChoicesData(id: number, user_id: string) {
+export async function GetChoicesData(id: string, user_id: string) {
     const formData = await db.select({
         formName: formsTable.name,
         choices_id: choicesTable.choices_id,

@@ -21,13 +21,13 @@ const db = drizzle(DATABASE_URL);
  * inserts a new text question into the database and returns
  * the text data if successful.
  *
- * @param {number} formID - The ID of the form to which the text question belongs.
+ * @param {string} formID - The ID of the form to which the text question belongs.
  * @param {string} question - The text of the question.
  * @param {number} orderIndex - The order index for the question within the form.
  * @returns {Promise<null | TextData>} - A promise that resolves to the newly created
  * text question data if successful, or null if not.
  */
-export async function CreateNewTextQuestion(formID: number, question: string, orderIndex: number): Promise<null | TextData> {
+export async function CreateNewTextQuestion(formID: string, question: string, orderIndex: number): Promise<null | TextData> {
     if (!(await CredentialsValid(formID))) {
         return null;
     }
@@ -136,11 +136,11 @@ export async function UpdateTextQuestionOrderIndex(questionID: number, order_ind
 /**
  * Retrieves text question data for a specific form and user.
  *
- * @param {number} id - The ID of the form.
+ * @param {string} id - The ID of the form.
  * @param {string} user_id - The ID of the user.
  * @returns {Promise<question[]>} - A promise that resolves to an array of text questions data.
  */
-export async function GetTextQuestionsData(id: number, user_id: string): Promise<question[]> {
+export async function GetTextQuestionsData(id: string, user_id: string): Promise<question[]> {
     const formData = await db.select({
         text_id: textQuestionsTable.text_question_id,
         question: textQuestionsTable.question,

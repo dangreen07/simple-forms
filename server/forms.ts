@@ -23,7 +23,7 @@ const db = drizzle(DATABASE_URL);
  * @param id - The form ID.
  * @returns The form name or an empty string if not found or unauthorized.
  */
-export async function GetFormName(id: number): Promise<string> {
+export async function GetFormName(id: string): Promise<string> {
     const session = await getSession();
     if (session == null) {
         // User not defined
@@ -39,7 +39,7 @@ export async function GetFormName(id: number): Promise<string> {
         // Invalid id or invalid credentials
         return "";
     }
-    const output = formData as { id: number, name: string, user_id: string };
+    const output = formData as { id: string, name: string, user_id: string };
     return output.name;
 }
 
@@ -49,7 +49,7 @@ export async function GetFormName(id: number): Promise<string> {
  * @param id - The form ID.
  * @returns An object containing the form name and questions or null if unauthorized.
  */
-export async function GetFormData(id: number) {
+export async function GetFormData(id: string) {
     const session = await getSession();
     if (session == null) {
         // User not defined
@@ -60,13 +60,15 @@ export async function GetFormData(id: number) {
     const output = [];
     const { output: choicesOutput, formName } = await GetChoicesData(id, user_id);
     output.push(...choicesOutput);
-    const textQuestionsOutput = await GetTextQuestionsData(id, user_id);
+    const [ textQuestionsOutput, ratingQuestionsOutput, dateQuestionsOutput, rankingQuestionsOutput ] = await Promise.all([
+        GetTextQuestionsData(id, user_id),
+        GetRatingQuestionsData(id, user_id),
+        GetDateQuestionsData(id, user_id),
+        GetRankingQuestionsData(id, user_id)
+    ]);
     output.push(...textQuestionsOutput);
-    const ratingQuestionsOutput = await GetRatingQuestionsData(id, user_id);
     output.push(...ratingQuestionsOutput);
-    const dateQuestionsOutput = await GetDateQuestionsData(id, user_id);
     output.push(...dateQuestionsOutput);
-    const rankingQuestionsOutput = await GetRankingQuestionsData(id, user_id);
     output.push(...rankingQuestionsOutput);
     return {
         formName: formName,
@@ -80,7 +82,7 @@ export async function GetFormData(id: number) {
  * @param name - The name of the new form.
  * @returns The ID of the newly created form or null if unauthorized.
  */
-export async function CreateNewForm(name: string): Promise<number | null> {
+export async function CreateNewForm(name: string): Promise<string | null> {
     const session = await getSession();
     if (session == null) {
         // User not defined
@@ -93,7 +95,7 @@ export async function CreateNewForm(name: string): Promise<number | null> {
         name: name,
         user_id: user_id
     }).returning();
-    const formID: number = response[0].id;
+    const formID = response[0].id;
     return formID;
 }
 
@@ -127,7 +129,7 @@ export async function GetForms() {
  * @param formTitle - The new title for the form.
  * @returns true if the update was successful, false otherwise.
  */
-export async function UpdateFormTitle(formID: number, formTitle: string) {
+export async function UpdateFormTitle(formID: string, formTitle: string) {
     const session = await getSession();
     if (session == null) {
         // User not defined
@@ -152,7 +154,7 @@ export async function UpdateFormTitle(formID: number, formTitle: string) {
  * @returns A promise that resolves to `true` if the form was successfully deleted,
  *          `false` if no form was deleted, or an empty array if the user session is not defined.
  */
-export async function DeleteForm(formID: number): Promise<boolean | []> {
+export async function DeleteForm(formID: string): Promise<boolean | []> {
     const session = await getSession();
     if (session == null) {
         // User not defined
