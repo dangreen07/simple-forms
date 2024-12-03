@@ -5,8 +5,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DeleteForm } from "@/server/forms";
 import { useRouter } from "next/navigation";
 
-export default function TopBar({ formID }: { formID: string }) {
-
+export default function TopBar({ formID, editor, setEditor }: { formID: string, setEditor: React.Dispatch<React.SetStateAction<boolean>>, editor: boolean }) {
     const router = useRouter();
 
     async function handleDeleteForm() {
@@ -48,8 +47,8 @@ export default function TopBar({ formID }: { formID: string }) {
                     </DialogContent>
                 </Dialog>
                 <Button onClick={() => {
-                    router.push('/form-preview/' + formID);
-                }} variant="outline">Preview</Button>
+                    setEditor(!editor);
+                }} variant="outline">{editor ? "Preview" : "Back"}</Button>
             </div>
         </div>
     );

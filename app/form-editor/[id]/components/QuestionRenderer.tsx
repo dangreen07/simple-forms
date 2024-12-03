@@ -1,12 +1,13 @@
 import React from 'react';
 import { DraggableProvided } from "@hello-pangea/dnd";
-import ChoiceQuestionComponent from './ChoiceQuestionComponent';
-import TextQuestionComponent from './TextQuestionComponent';
-import RatingQuestionComponent from './RatingQuestionComponent';
-import DateQuestionComponent from './DateQuestionComponent';
-import RankingQuestionComponent from './RankingQuestionComponent';
 import { question } from "@/server/types";
 import { updateOrderIndex } from '@/functions/updateOrderIndex';
+
+const ChoiceQuestionComponent = React.lazy(() => import('./ChoiceQuestionComponent'));
+const TextQuestionComponent = React.lazy(() => import('./TextQuestionComponent'));
+const RatingQuestionComponent = React.lazy(() => import('./RatingQuestionComponent'));
+const DateQuestionComponent = React.lazy(() => import('./DateQuestionComponent'));
+const RankingQuestionComponent = React.lazy(() => import('./RankingQuestionComponent'));
 
 interface QuestionRendererProps {
   question: question;

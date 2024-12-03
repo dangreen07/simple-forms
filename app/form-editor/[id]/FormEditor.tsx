@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaRegCalendarDays, FaRegThumbsUp } from "react-icons/fa6";
 import { FiPlus } from "react-icons/fi";
 import { LuArrowDownUp } from "react-icons/lu";
@@ -12,16 +12,13 @@ import { UpdateFormTitle } from "@/server/forms";
 import { CreateNewTextQuestion } from "@/server/textQuestions";
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { CreateNewRatingQuestion } from "@/server/ratings";
-import TextareaAutosize from 'react-textarea-autosize';
 import { CreateNewDateQuestion } from "@/server/dates";
 import { CreateNewRankingQuestion } from "@/server/rankingQuestions";
 import QuestionRenderer from "./components/QuestionRenderer";
 import { updateOrderIndex } from "@/functions/updateOrderIndex";
 import { useClickOutside } from "@/functions/useClickOutside";
 
-export default function FormEditor({ initialFormName, initialQuestions, formID }: { initialFormName: string, initialQuestions: question[], formID: string }) {
-    const [formName, setFormName] = useState(initialFormName);
-    const [questions, setQuestions] = useState<question[]>(initialQuestions);
+export default function FormEditor({ questions, setQuestions, formName, setFormName, formID }: { questions: question[], setQuestions: React.Dispatch<React.SetStateAction<question[]>>, formName: string, setFormName: React.Dispatch<React.SetStateAction<string>>, formID: string }) {
     const [justCreatedIndex, setJustCreatedIndex] = useState(-1);
     const titleRef = useRef<HTMLTextAreaElement | null>(null);
     const [editingTitle, setEditingTitle] = useState(false);
@@ -99,19 +96,32 @@ export default function FormEditor({ initialFormName, initialQuestions, formID }
         setWaitingForNewQuestionResponse(false);
     };
 
+    const resizeTextArea = () => {
+        if (titleRef.current) {
+            titleRef.current.style.height = "auto";
+            titleRef.current.style.height = titleRef.current.scrollHeight + "px";
+        }
+    }
+
+    useEffect(() => {
+        resizeTextArea();
+        window.addEventListener("resize", resizeTextArea);
+    }, []);
+
     return (
-        <div className="flex justify-center">
+        <div className="flex justify-center flex-grow">
             <div className="bg-neutral-100 max-w-6xl flex-grow mb-6 rounded-lg">
-                <div id="form-content" className="w-full flex flex-col text-black px-2 md:px-12 py-16 gap-4">
-                    <TextareaAutosize ref={titleRef} value={formName} onChange={(current) => {
+                <div id="form-content" className="w-full flex flex-col text-black px-2 md:px-12 py-16 gap-2 justify-start">
+                    <textarea ref={titleRef} value={formName} onChange={(current) => {
                         setEditingTitle(true);
                         setFormName(current.target.value);
+                        resizeTextArea();
                     }} className="resize-none text-3xl sm:text-4xl md:text-5xl font-semibold bg-neutral-100 border-none outline-none w-full" placeholder="Form title here..." />
                     <DragDropContext onDragEnd={onDragEnd}>
                         <Droppable droppableId="droppable">
                             {(provided) => (
                                 <div
-                                    className="flex flex-col gap-4"
+                                    className="flex flex-col gap-2"
                                     {...provided.droppableProps}
                                     ref={provided.innerRef}
                                 >
