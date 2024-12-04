@@ -22,8 +22,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"],
-  "rules": {
-    "no-unused-vars": "off"
-  }
+  "exclude": ["node_modules"]
 }

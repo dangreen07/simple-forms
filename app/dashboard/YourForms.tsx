@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiEdit, FiPlus } from "react-icons/fi";
 
 export default function YourForms({ forms } : { forms: {
-    id: number,
+    id: string,
     name: string,
 }[] }) {
     const router = useRouter();
