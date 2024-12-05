@@ -26,7 +26,7 @@ export default function LoginForm() {
                     <button onClick={async () => {
                         const response = await  login({ username, password });
                         if (response == "Redirect") {
-                            router.push("/");
+                            router.push("/dashboard");
                         }
                         else if (response != null) {
                             setError(response);
