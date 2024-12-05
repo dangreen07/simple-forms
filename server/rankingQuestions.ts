@@ -5,7 +5,7 @@ import { question, RankingData, RankOptionData } from "./types";
 import { CredentialsValid } from "./auth";
 import { formsTable, rankingOptionsTable, rankingQuestionTable } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getSession } from "@auth0/nextjs-auth0";
+import { validateRequest } from "@/auth/validation";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 if (DATABASE_URL == "") {
@@ -71,12 +71,12 @@ export async function CreateNewRankingQuestion(formID: string, question: string,
  * @returns A promise that resolves to true if the question is deleted, otherwise false.
  */
 export async function DeleteRankingQuestion(questionID: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [ authData ] = await db.select().from(formsTable).leftJoin(rankingQuestionTable, eq(rankingQuestionTable.form_id, formsTable.id)).where(and(eq(rankingQuestionTable.ranking_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
@@ -99,12 +99,13 @@ export async function DeleteRankingQuestion(questionID: number): Promise<boolean
  * @returns A promise that resolves to true if the update is successful, otherwise false.
  */
 export async function UpdateRankingQuestion(questionID: number, questionText: string, rankingOptions: RankOptionData[], order_index: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
+
     const [ authData ] = await db.select().from(formsTable).leftJoin(rankingQuestionTable, eq(rankingQuestionTable.form_id, formsTable.id)).where(and(eq(rankingQuestionTable.ranking_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
         return false;
@@ -134,12 +135,12 @@ export async function UpdateRankingQuestion(questionID: number, questionText: st
  * @returns A promise that resolves to true if the update is successful, otherwise false.
  */
 export async function UpdateRankingQuestionOrderIndex(questionID: number, order_index: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [ authData ] = await db.select().from(formsTable).leftJoin(rankingQuestionTable, eq(rankingQuestionTable.form_id, formsTable.id)).where(and(eq(rankingQuestionTable.ranking_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
@@ -248,12 +249,12 @@ function RankingDataProcess(formData: { ranking_question_id: number | null; rank
  * @returns A promise that resolves to the created RankOptionData object or null if creation fails.
  */
 export async function CreateNewRankingOption(questionID: number, option: string, order_index: number): Promise<RankOptionData | null> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return null;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [authData] = await db.select().from(formsTable).leftJoin(rankingQuestionTable, eq(rankingQuestionTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
@@ -282,12 +283,12 @@ export async function CreateNewRankingOption(questionID: number, option: string,
  * @returns A promise that resolves to true if the option is deleted, otherwise false.
  */
 export async function DeleteRankingOption(option_id: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [authData] = await db.select().from(formsTable).leftJoin(rankingQuestionTable, eq(rankingQuestionTable.form_id, formsTable.id)).leftJoin(rankingOptionsTable, eq(rankingOptionsTable.ranking_id, rankingQuestionTable.ranking_question_id)).where(and(eq(formsTable.user_id, user_id), eq(rankingOptionsTable.ranking_option_id, option_id)));
     if (authData == undefined) {

@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, serial, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, serial, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const formsTable = pgTable("forms", {
     id: uuid('id').notNull().primaryKey().defaultRandom(),
@@ -59,4 +59,21 @@ export const rankingOptionsTable = pgTable("ranking_options", {
     option: varchar('option'),
     orderIndex: integer('order_index').default(-1).notNull(),
     ranking_id: serial('ranking_id').references(() => rankingQuestionTable.ranking_question_id, { onDelete: 'cascade' }).notNull()
+});
+
+export const userTable = pgTable("user", {
+	id: text("id").primaryKey(),
+    username: text("username").notNull(),
+    password_hash: text("password_hash").notNull(),
+});
+
+export const sessionTable = pgTable("session", {
+	id: text("id").primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => userTable.id),
+	expiresAt: timestamp("expires_at", {
+		withTimezone: true,
+		mode: "date"
+	}).notNull()
 });

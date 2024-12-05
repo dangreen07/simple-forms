@@ -59,7 +59,7 @@ export default function DateQuestionComponent({ justCreated, questions, setQuest
                 <p className="text-lg font-bold">{index + 1}. {questions[index].data.questionText}</p>
                 <div className="flex flex-col gap-3 pl-4">
                     <div className="outline-none border-none bg-neutral-300 p-2 rounded-md disabled:opacity-50 disabled:text-black">
-                        <p className="text-md text-black">Please input the date (yyyy-mm-dd) here</p>
+                        <p className="text-md text-black">Please input the date here</p>
                     </div>
                 </div>
             </div> }

@@ -6,7 +6,15 @@ import { question } from "@/server/types";
 import TopBar from "./components/TopBar";
 import dynamic from "next/dynamic";
 
-const DynamicFormPreview = dynamic(() => import("./FormPreview"));
+const DynamicFormPreview = dynamic(() => import("./FormPreview"), {
+    loading: () => (
+        <div className="flex justify-center flex-grow">
+            <div className="bg-neutral-100 max-w-6xl flex-grow mb-6 rounded-lg flex justify-center items-center">
+                <span className="loading loading-spinner loading-lg"></span>
+            </div>
+        </div>
+    )
+});
 
 export default function ViewManager({ initialFormName, initialQuestions, formID }: {
     initialFormName: string;

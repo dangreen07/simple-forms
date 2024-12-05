@@ -5,7 +5,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { CredentialsValid } from "./auth";
 import { eq, and } from "drizzle-orm";
 import { ChoiceData, OptionsData, question } from "./types";
-import { getSession } from "@auth0/nextjs-auth0";
+import { validateRequest } from "@/auth/validation";
 
 // Setup the database connection
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
@@ -74,12 +74,13 @@ export async function CreateNewChoicesQuestion(formID: string, questionText: str
  * @returns A boolean indicating success or failure.
  */
 export async function UpdateChoiceQuestion(choiceID: number, questionText: string, options: OptionsData[], order_index: number) {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
+        // User not defined
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user?.id ?? "";
     const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
         return false;
@@ -108,12 +109,13 @@ export async function UpdateChoiceQuestion(choiceID: number, questionText: strin
  * @returns The created option data or null if not authorized.
  */
 export async function CreateNewChoiceOption(choiceID: number, option: string, order_index: number): Promise<OptionsData | null> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
+        // User not defined
         return null;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user?.id ?? "";
     const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
         return null;
@@ -141,12 +143,13 @@ export async function CreateNewChoiceOption(choiceID: number, option: string, or
  * @returns A boolean indicating success or failure of the deletion.
  */
 export async function DeleteChoiceOption(option_id: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
+        // User not defined
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user?.id ?? "";
 
     const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).leftJoin(choicesOptionsTable, eq(choicesOptionsTable.choices_id, choicesTable.choices_id)).where(and(eq(formsTable.user_id, user_id), eq(choicesOptionsTable.option_id, option_id)));
     if (authData == undefined) {
@@ -163,12 +166,13 @@ export async function DeleteChoiceOption(option_id: number): Promise<boolean> {
  * @returns A boolean indicating success or failure of the deletion.
  */
 export async function DeleteChoice(choices_id: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
+        // User not defined
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user?.id ?? "";
 
     const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
@@ -185,13 +189,14 @@ export async function DeleteChoice(choices_id: number): Promise<boolean> {
  * @param order_index - New order index for the choice question.
  * @returns A boolean indicating success or failure of the update.
  */
-export async function UpdateChoiceOrderIndex(choices_id: number, order_index: number) {
-    const session = await getSession();
-    if (session == null) {
+export async function UpdateChoiceOrderIndex(choices_id: number, order_index: number): Promise<boolean> {
+    const session = await validateRequest();
+    if (session.session == null) {
+        // User not defined
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user?.id ?? "";
 
     const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(and(eq(choicesTable.choices_id, choices_id), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {

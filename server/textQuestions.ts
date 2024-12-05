@@ -4,8 +4,8 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { CredentialsValid } from "./auth";
 import { choicesTable, formsTable, textQuestionsTable } from "@/db/schema";
 import { question, TextData } from "./types";
-import { getSession } from "@auth0/nextjs-auth0";
 import { eq, and } from "drizzle-orm";
+import { validateRequest } from "@/auth/validation";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 if (DATABASE_URL == "") {
@@ -59,12 +59,12 @@ export async function CreateNewTextQuestion(formID: string, question: string, or
  * @returns {Promise<boolean>} - A promise that resolves to true if the update is successful.
  */
 export async function UpdateTextQuestion(questionID: number, questionText: string, order_index: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
     const [authData] = await db.select().from(formsTable).leftJoin(choicesTable, eq(choicesTable.form_id, formsTable.id)).where(eq(formsTable.user_id, user_id));
     if (authData == undefined) {
         return false;
@@ -87,12 +87,12 @@ export async function UpdateTextQuestion(questionID: number, questionText: strin
  * @returns {Promise<boolean>} - A promise that resolves to true if the question is successfully deleted.
  */
 export async function DeleteTextQuestion(questionID: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [authData] = await db.select().from(formsTable).leftJoin(textQuestionsTable, eq(textQuestionsTable.form_id, formsTable.id)).where(and(eq(textQuestionsTable.text_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
@@ -113,12 +113,12 @@ export async function DeleteTextQuestion(questionID: number): Promise<boolean> {
  * @returns {Promise<boolean>} - A promise that resolves to true if the update is successful.
  */
 export async function UpdateTextQuestionOrderIndex(questionID: number, order_index: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [authData] = await db.select().from(formsTable).leftJoin(textQuestionsTable, eq(textQuestionsTable.form_id, formsTable.id)).where(and(eq(textQuestionsTable.text_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {

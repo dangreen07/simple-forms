@@ -4,8 +4,8 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { question, RatingData } from "./types";
 import { CredentialsValid } from "./auth";
 import { formsTable, ratingQuestionTable } from "@/db/schema";
-import { getSession } from "@auth0/nextjs-auth0";
 import { eq, and } from 'drizzle-orm';
+import { validateRequest } from "@/auth/validation";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 if (DATABASE_URL == "") {
@@ -66,12 +66,12 @@ export async function CreateNewRatingQuestion(formID: string, question: string, 
  * question was successfully deleted, or false otherwise.
  */
 export async function DeleteRatingQuestion(questionID: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [ authData ] = await db.select().from(formsTable).leftJoin(ratingQuestionTable, eq(ratingQuestionTable.form_id, formsTable.id)).where(and(eq(ratingQuestionTable.rating_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
@@ -94,12 +94,12 @@ export async function DeleteRatingQuestion(questionID: number): Promise<boolean>
  * @returns {Promise<boolean>} - A promise that resolves to true if the update is successful, false otherwise.
  */
 export async function UpdateRatingQuestion(questionID: number, questionText: string, ratingsLevel: number, order_index: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
     const [ authData ] = await db.select().from(formsTable).leftJoin(ratingQuestionTable, eq(ratingQuestionTable.form_id, formsTable.id)).where(and(eq(ratingQuestionTable.rating_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
         return false;
@@ -124,12 +124,12 @@ export async function UpdateRatingQuestion(questionID: number, questionText: str
  * @returns {Promise<boolean>} - A promise that resolves to true if the update is successful, false otherwise.
  */
 export async function UpdateRatingQuestionOrderIndex(questionID: number, order_index: number): Promise<boolean> {
-    const session = await getSession();
-    if (session == null) {
+    const session = await validateRequest();
+    if (session.session == null) {
         return false;
     }
     const user = session.user;
-    const user_id = user.sub;
+    const user_id = user.id;
 
     const [ authData ] = await db.select().from(formsTable).leftJoin(ratingQuestionTable, eq(ratingQuestionTable.form_id, formsTable.id)).where(and(eq(ratingQuestionTable.rating_question_id, questionID), eq(formsTable.user_id, user_id)));
     if (authData == undefined) {
