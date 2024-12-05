@@ -36,7 +36,7 @@ export default function FormPreview({ questions, formName }: { questions: questi
                     {questions.sort((a,b) => a.data.order_index - b.data.order_index).map((current, index) => outputPreviewQuestions(current, index))}
                 </div>
                 <div className="flex justify-center items-center">
-                    <button className="btn btn-primary text-white btn-lg btn-wide">Submit</button>
+                    <button className="btn btn-primary text-white btn-lg btn-wide bg-blue-700 hover:bg-blue-700 hover:opacity-90">Submit</button>
                 </div>
             </div>
         </div>
