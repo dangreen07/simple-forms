@@ -22,8 +22,7 @@ export default async function NavigationAnyAccess({ checkSession = true, backgro
             <RxHamburgerMenu size={24} className={textColor} />
           </label>
           <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 flex flex-col gap-2">
-            <li><Link href={""} className={`${textColor} font-medium text-lg md:text-xl`}>About Us</Link></li>
-            <li><Link href={""} className={`${textColor} font-medium text-lg md:text-xl`}>Pricing</Link></li>
+            <li><Link href={"/about"} className={`${textColor} font-medium text-lg md:text-xl`}>About</Link></li>
             {user && <li><Link href={"/dashboard"} className={`${textColor} font-medium text-lg md:text-xl`}>Dashboard</Link></li>}
             {!user && <li><Link href={"/signup"} className='bg-blue-700 p-3 text-white font-bold rounded-xl'>JOIN NOW</Link></li>}
             {user && <li><LogoutButton /></li>}
@@ -31,8 +30,7 @@ export default async function NavigationAnyAccess({ checkSession = true, backgro
         </div>
       </div>
       <div id="RHS" className="hidden md:flex gap-4 md:gap-16 items-center">
-        <Link href={""} className={`${textColor} font-medium text-xl`}>About Us</Link>
-        <Link href={""} className={`${textColor} font-medium text-xl`}>Pricing</Link>
+        <Link href={"/about"} className={`${textColor} font-medium text-xl`}>About</Link>
         {user && <Link href={"/dashboard"} className={`${textColor} font-medium text-xl`}>Dashboard</Link>}
         {!user && <Link href={"/signup"} className='bg-blue-700 p-1 lg:p-3 text-white font-bold rounded-xl text-center'>JOIN NOW</Link>}
         {user && <LogoutButton />}
