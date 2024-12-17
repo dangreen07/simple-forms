@@ -11,7 +11,7 @@ export async function FormLoadPage({ formID }: { formID: string }) {
     }
     
     return (
-        <div className="flex flex-grow bg-gradient-to-b from-blue-300 to-green-300 bg-fixed">
+        <div className="flex flex-grow bg-gradient-to-b from-blue-300 to-green-300 bg-fixed h-full">
             <ViewManager initialFormName={data.formName} initialQuestions={data.questions} formID={formID} />
         </div>
     )

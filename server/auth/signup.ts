@@ -4,7 +4,7 @@ import { lucia } from "@/auth/lucia";
 import { generateIdFromEntropySize } from "lucia";
 import { cookies } from "next/headers";
 import { hash } from "@node-rs/argon2";
-import { db } from "@/auth/database";
+import { auth_db } from "@/auth/database";
 import { userTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -34,12 +34,12 @@ export async function signup(formData: { username: string, password: string }): 
 	});
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
-	const [alreadyExists] = await db.select().from(userTable).where(eq(userTable.username, username));
+	const [alreadyExists] = await auth_db.select().from(userTable).where(eq(userTable.username, username));
 	if (alreadyExists) {
 		return "This account already exists";
 	}
 	// TODO: check if username is already used
-	await db.insert(userTable).values({
+	await auth_db.insert(userTable).values({
 		id: userId,
 		username: username,
 		password_hash: passwordHash

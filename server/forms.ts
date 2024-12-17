@@ -1,6 +1,5 @@
 "use server";
 
-import { drizzle } from "drizzle-orm/neon-http";
 import { formsTable } from "@/db/schema";
 import { eq, and } from 'drizzle-orm';
 import { GetTextQuestionsData } from "./textQuestions";
@@ -9,13 +8,7 @@ import { GetRatingQuestionsData } from "./ratings";
 import { GetDateQuestionsData } from "./dates";
 import { GetRankingQuestionsData } from "./rankingQuestions";
 import { validateRequest } from "@/auth/validation";
-
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
-if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the enviroment variables file!");
-}
-
-const db = drizzle(DATABASE_URL);
+import { db } from "@/db/database";
 
 /**
  * Retrieves the name of a form by its ID for the authenticated user.

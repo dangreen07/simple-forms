@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/auth/database";
+import { auth_db } from "@/auth/database";
 import { lucia } from "@/auth/lucia";
 import { userTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -21,7 +21,7 @@ export async function login(formData: {username: string, password: string}): Pro
 	if (typeof password !== "string" || password.length < 6 || password.length > 255) {
 		return "Invalid password";
 	}
-    const [ existingUser ] = await db.select().from(userTable).where(eq(userTable.username, username));
+    const [ existingUser ] = await auth_db.select().from(userTable).where(eq(userTable.username, username));
     if (existingUser == undefined) {
         // NOTE:
 		// Returning immediately allows malicious actors to figure out valid usernames from response times,

@@ -1,18 +1,11 @@
 "use server";
 
-import { drizzle } from "drizzle-orm/neon-http";
 import { question, DateData } from "./types";
 import { CredentialsValid } from "./auth";
 import { formsTable, dateQuestionTable } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { validateRequest } from "@/auth/validation";
-
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
-if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the enviroment variables file!");
-}
-
-const db = drizzle(DATABASE_URL);
+import { db } from "@/db/database";
 
 /**
  * Creates a new date question for a specified form.
@@ -41,7 +34,8 @@ export async function CreateNewDateQuestion(formID: string, question: string, or
         id: response[0].date_question_id,
         questionText: response[0].question ?? "",
         order_index: response[0].orderIndex,
-        required: response[0].required
+        required: response[0].required,
+        editable: response[0].editable
     }
 }
 
@@ -141,6 +135,7 @@ export async function GetDateQuestionsData(id: string, user_id: string): Promise
         question: dateQuestionTable.question,
         order_index: dateQuestionTable.orderIndex,
         date_question_required: dateQuestionTable.required,
+        date_editable: dateQuestionTable.editable,
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -164,6 +159,7 @@ function DateDataProcess(formData: {
     question: string | null;
     order_index: number | null;
     date_question_required: boolean | null;
+    date_editable: boolean | null;
 }[]): question[] {
     return formData.filter((current) => current.date_question_id != null).map((element) => {
         return {
@@ -172,7 +168,8 @@ function DateDataProcess(formData: {
                 id: element.date_question_id ?? -1,
                 questionText: element.question ?? "",
                 order_index: element.order_index ?? -1,
-                required: element.date_question_required ?? false
+                required: element.date_question_required ?? false,
+                editable: element.date_editable ?? false
             }
         }
     })

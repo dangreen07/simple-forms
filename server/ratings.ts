@@ -1,18 +1,11 @@
 "use server";
 
-import { drizzle } from "drizzle-orm/neon-http";
 import { question, RatingData } from "./types";
 import { CredentialsValid } from "./auth";
 import { formsTable, ratingQuestionTable } from "@/db/schema";
 import { eq, and } from 'drizzle-orm';
 import { validateRequest } from "@/auth/validation";
-
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
-if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the enviroment variables file!");
-}
-
-const db = drizzle(DATABASE_URL);
+import { db } from "@/db/database";
 
 /**
  * Creates a new rating question for a specified form.
@@ -49,7 +42,8 @@ export async function CreateNewRatingQuestion(formID: string, question: string, 
         questionText: response[0].question ?? "",
         ratingsLevel: response[0].ratingLevels,
         order_index: response[0].orderIndex,
-        required: response[0].required
+        required: response[0].required,
+        editable: response[0].editable
     }
 }
 
@@ -158,6 +152,7 @@ export async function GetRatingQuestionsData(id: string, user_id: string): Promi
         rating_level: ratingQuestionTable.ratingLevels,
         order_index: ratingQuestionTable.orderIndex,
         rating_question_required: ratingQuestionTable.required,
+        rating_editable: ratingQuestionTable.editable,
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -182,6 +177,7 @@ function RatingDataProcess(formData: {
     rating_level: number | null;
     order_index: number | null;
     rating_question_required: boolean | null;
+    rating_editable: boolean | null;
 }[]): question[] {
     const ratings: question[] = formData.filter((current) => current.rating_question_id != null).map((element) => {
         return {
@@ -191,7 +187,8 @@ function RatingDataProcess(formData: {
                 questionText: element.rating_question ?? "",
                 ratingsLevel: element.rating_level ?? -1,
                 order_index: element.order_index ?? -1,
-                required: element.rating_question_required ?? false
+                required: element.rating_question_required ?? false,
+                editable: element.rating_editable ?? false
             }
         }
     })

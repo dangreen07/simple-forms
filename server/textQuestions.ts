@@ -1,18 +1,11 @@
 "use server";
 
-import { drizzle } from "drizzle-orm/neon-http";
 import { CredentialsValid } from "./auth";
 import { choicesTable, formsTable, textQuestionsTable } from "@/db/schema";
 import { question, TextData } from "./types";
 import { eq, and } from "drizzle-orm";
 import { validateRequest } from "@/auth/validation";
-
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
-if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the enviroment variables file!");
-}
-
-const db = drizzle(DATABASE_URL);
+import { db } from "@/db/database";
 
 /**
  * Creates a new text question for a specified form.
@@ -46,7 +39,8 @@ export async function CreateNewTextQuestion(formID: string, question: string, or
         id: response[0].text_question_id,
         questionText: response[0].question ?? "",
         order_index: response[0].textOrderIndex,
-        required: false
+        required: response[0].required,
+        editable: response[0].editable
     }
 }
 
@@ -146,6 +140,7 @@ export async function GetTextQuestionsData(id: string, user_id: string): Promise
         question: textQuestionsTable.question,
         order_index: textQuestionsTable.textOrderIndex,
         text_question_required: textQuestionsTable.required,
+        text_editable: textQuestionsTable.editable,
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -168,6 +163,7 @@ function TextDataProcess(formData: {
     question: string | null;
     order_index: number | null;
     text_question_required: boolean | null;
+    text_editable: boolean | null;
 }[]): question[] {
     return formData.filter((current) => current.text_id != null).map((element) => {
         return {
@@ -176,7 +172,8 @@ function TextDataProcess(formData: {
                 id: element.text_id ?? -1,
                 questionText: element.question ?? "",
                 order_index: element.order_index ?? -1,
-                required: element.text_question_required ?? false
+                required: element.text_question_required ?? false,
+                editable: element.text_editable ?? false
             }
         }
     })

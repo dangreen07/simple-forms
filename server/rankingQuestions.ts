@@ -1,18 +1,11 @@
 "use server";
 
-import { drizzle } from "drizzle-orm/neon-http";
 import { question, RankingData, RankOptionData } from "./types";
 import { CredentialsValid } from "./auth";
 import { formsTable, rankingOptionsTable, rankingQuestionTable } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { validateRequest } from "@/auth/validation";
-
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
-if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the enviroment variables file!");
-}
-
-const db = drizzle(DATABASE_URL);
+import { db } from "@/db/database";
 
 /**
  * Creates a new ranking question for a specified form.
@@ -60,7 +53,8 @@ export async function CreateNewRankingQuestion(formID: string, question: string,
         questionText: response[0].question ?? "",
         rankOptions: optionsList,
         order_index: response[0].orderIndex,
-        required: response[0].required
+        required: response[0].required,
+        editable: response[0].editable
     }
 }
 
@@ -171,6 +165,7 @@ export async function GetRankingQuestionsData(id: string, user_id: string): Prom
         ranking_option: rankingOptionsTable.option,
         ranking_option_order_index: rankingOptionsTable.orderIndex,
         ranking_question_required: rankingQuestionTable.required,
+        ranking_editable: rankingQuestionTable.editable,
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -188,7 +183,7 @@ export async function GetRankingQuestionsData(id: string, user_id: string): Prom
  * @param formData - The raw form data array.
  * @returns An array of formatted question objects.
  */
-function RankingDataProcess(formData: { ranking_question_id: number | null; ranking_question: string | null; ranking_order_index: number | null; ranking_option_id: number | null; ranking_option: string | null; ranking_option_order_index: number | null; ranking_question_required: boolean | null; }[]): question[] {
+function RankingDataProcess(formData: { ranking_question_id: number | null; ranking_question: string | null; ranking_order_index: number | null; ranking_option_id: number | null; ranking_option: string | null; ranking_option_order_index: number | null; ranking_question_required: boolean | null; ranking_editable: boolean | null; }[]): question[] {
     const rankingQuestions: RankingData[] = [];
     formData.forEach(element => {
         let optionsList: RankOptionData[] = [];
@@ -211,6 +206,7 @@ function RankingDataProcess(formData: { ranking_question_id: number | null; rank
                 rankOptions: optionsList,
                 order_index: element.ranking_order_index ?? -1,
                 required: element.ranking_question_required ?? false,
+                editable: element.ranking_editable ?? false
             };
         } else {
             if (element.ranking_option != null) {
@@ -227,6 +223,7 @@ function RankingDataProcess(formData: { ranking_question_id: number | null; rank
                     rankOptions: optionsList,
                     order_index: element.ranking_order_index ?? -1,
                     required: element.ranking_question_required ?? false,
+                    editable: element.ranking_editable ?? false
                 });
             }
         }

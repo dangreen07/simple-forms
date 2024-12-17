@@ -1,19 +1,11 @@
 "use server";
 
 import { choicesOptionsTable, choicesTable, formsTable } from "@/db/schema";
-import { drizzle } from "drizzle-orm/neon-http";
 import { CredentialsValid } from "./auth";
 import { eq, and } from "drizzle-orm";
 import { ChoiceData, OptionsData, question } from "./types";
 import { validateRequest } from "@/auth/validation";
-
-// Setup the database connection
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
-if (DATABASE_URL == "") {
-    throw Error("Database url is not set in the environment variables file!");
-}
-
-const db = drizzle(DATABASE_URL);
+import { db } from "@/db/database";
 
 /**
  * Creates a new choice question with its options in the database.
@@ -58,7 +50,7 @@ export async function CreateNewChoicesQuestion(formID: string, questionText: str
             }
         }),
         questionText: response[0].question ?? "",
-        editMode: true,
+        editable: response[0].editable,
         order_index: response[0].choicesOrderIndex,
         required: response[0].required
     }
@@ -225,6 +217,7 @@ export async function GetChoicesData(id: string, user_id: string) {
         option_id: choicesOptionsTable.option_id,
         option: choicesOptionsTable.option,
         option_order_index: choicesOptionsTable.orderIndex,
+        choices_editable: choicesTable.editable,
     }).from(formsTable).where(and(
         eq(formsTable.id, id),
         eq(formsTable.user_id, user_id)
@@ -255,6 +248,7 @@ function ChoicesDataProcess(formData: {
     option_id: number | null;
     option: string | null;
     option_order_index: number | null;
+    choices_editable: boolean | null;
 }[]) {
     const choices: ChoiceData[] = [];
     formData.forEach(element => {
@@ -276,7 +270,7 @@ function ChoicesDataProcess(formData: {
                 id: element.choices_id ?? 0,
                 questionText: element.choices_question ?? "",
                 options: optionsList,
-                editMode: false,
+                editable: element.choices_editable ?? false,
                 order_index: element.choices_order_index ?? -1,
                 required: element.choices_question_required ?? false,
             };
@@ -294,7 +288,7 @@ function ChoicesDataProcess(formData: {
                     id: element.choices_id,
                     questionText: element.choices_question ?? "",
                     options: optionsList,
-                    editMode: false,
+                    editable: element.choices_editable ?? false,
                     order_index: element.choices_order_index ?? -1,
                     required: element.choices_question_required ?? false,
                 });
